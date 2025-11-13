@@ -1,35 +1,18 @@
 import streamlit as st
-import importlib
 import io
 import csv
 from typing import Dict, Any, List, Tuple
 
-# ---- Import des jeux de données depuis ue_data_s4.py ----
-# Assure-toi d'avoir un fichier ue_data_s4.py dans le même repo contenant variables ue_data_*
-try:
-    import ue_data_s4
-except Exception as e:
-    st.error(f"Impossible d'importer ue_data_s4.py : {e}")
-    raise
+# ---------- CONFIG ----------
+st.set_page_config(page_title="Calculateur de Moyenne — S5", layout="wide")
+st.title("🎓 Calculateur de Moyenne — S5")
+st.caption("Ajoute tes UEs, tes notes et découvre ta moyenne générale en temps réel.")
 
-# Récupère toutes les variables commençant par 'ue_data_'
-ENSEMBLES_DONNEES: Dict[str, Dict] = {
-    name: getattr(ue_data_s4, name)
-    for name in dir(ue_data_s4)
-    if name.startswith("ue_data_")
-}
+# ---------- INIT SESSION ----------
+if "ue_data" not in st.session_state:
+    st.session_state.ue_data: Dict[str, Dict[str, Any]] = {}
 
-# ---- Fonctions (même logique que ton script original) ----
-def charger_donnees(selection: str) -> Dict[str, Any]:
-    data = ENSEMBLES_DONNEES.get(selection, {})
-    # On clone la structure pour travailler sur une copie (évite de modifier l'original)
-    import copy
-    data_copy = copy.deepcopy(data)
-    for ue in data_copy:
-        if "rattrapage" in data_copy[ue]:
-            data_copy[ue]["seconde_chance"] = data_copy[ue]["rattrapage"]
-    return data_copy
-
+# ---------- FONCTIONS ----------
 def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]], float, float or None, List[str]]:
     resultats = []
     moyenne_globale, total_coefficients = 0.0, 0.0
@@ -38,7 +21,7 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
 
     for ue, data in ue_data.items():
         coef = data.get("coef", 1)
-        notes = data.get("grades", [])  # liste de (note or None, poids)
+        notes = data.get("grades", [])
         score_actuel, poids_total, poids_restants = 0.0, 0.0, 0.0
 
         for note, poids in notes:
@@ -53,7 +36,6 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
 
         note_seconde_chance = data.get("seconde_chance")
         if note_seconde_chance is not None:
-            # on applique la règle que tu avais : moyenne = max(moyenne, 0.5*moyenne + 0.5*note_sc)
             moyenne_ue = max(moyenne_ue, moyenne_ue * 0.5 + note_seconde_chance * 0.5)
 
         score_necessaire = 10 * poids_total - score_actuel
@@ -66,27 +48,24 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
             note_minimale = max(0.0, min(20.0, note_minimale))
 
         if moyenne_ue >= 10:
-            statut = "✔ Validée"
+            statut = "✅ Validée"
         elif note_seconde_chance is not None:
             statut = "⚠ En attente du rattrapage"
         elif poids_restants:
-            statut = f"⚠ {note_minimale:.2f}"
+            statut = f"⚠ Besoin ≥ {note_minimale:.2f}"
         else:
-            statut = "❌ Impossible"
+            statut = "❌ Non validée"
 
         moyenne_globale += moyenne_ue * coef
         total_coefficients += coef
-
         score_actuel_global += score_actuel * coef
         poids_restants_globaux += poids_restants * coef
-
         if poids_restants > 0:
             ue_modifiables.append(ue)
 
         resultats.append((ue, f"{moyenne_ue:.2f}", statut))
 
     moyenne_generale = (moyenne_globale / total_coefficients) if total_coefficients else 0.0
-
     if poids_restants_globaux > 0:
         score_necessaire_global = 10 * total_coefficients - score_actuel_global
         moyenne_min_restante = score_necessaire_global / poids_restants_globaux
@@ -96,110 +75,69 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
 
     return resultats, moyenne_generale, moyenne_min_restante, ue_modifiables
 
-# ---- Session state initialization ----
-if "selected_dataset" not in st.session_state:
-    st.session_state.selected_dataset = list(ENSEMBLES_DONNEES.keys())[0] if ENSEMBLES_DONNEES else None
-if "ue_data" not in st.session_state:
-    st.session_state.ue_data = {}
-if "original_loaded_name" not in st.session_state:
-    st.session_state.original_loaded_name = None
 
-# ---- UI ----
-st.set_page_config(page_title="Gestion des Moyennes — Web", layout="wide")
-st.title("Gestion des Moyennes avec Seconde Chance")
-
-col1, col2 = st.columns([2, 3])
-
-with col1:
-    st.subheader("Jeux de données")
-    if not ENSEMBLES_DONNEES:
-        st.error("Aucun jeu de données ue_data_* trouvé dans ue_data_s4.py")
+# ---------- AJOUT UE ----------
+st.sidebar.header("➕ Ajouter une UE")
+ue_name = st.sidebar.text_input("Nom de l'UE")
+coef = st.sidebar.number_input("Coefficient", min_value=0.5, max_value=10.0, value=1.0, step=0.5)
+if st.sidebar.button("Ajouter l’UE"):
+    if ue_name.strip() == "":
+        st.sidebar.warning("Entre un nom valide.")
     else:
-        dataset = st.selectbox("Choisissez l'ensemble de données :", list(ENSEMBLES_DONNEES.keys()), index=list(ENSEMBLES_DONNEES.keys()).index(st.session_state.selected_dataset) if st.session_state.selected_dataset in ENSEMBLES_DONNEES else 0)
-        if st.button("Charger"):
-            st.session_state.ue_data = charger_donnees(dataset)
-            st.session_state.selected_dataset = dataset
-            st.session_state.original_loaded_name = dataset
-            st.success(f"Jeu de données '{dataset}' chargé.")
+        st.session_state.ue_data[ue_name] = {"coef": coef, "grades": []}
+        st.sidebar.success(f"UE '{ue_name}' ajoutée.")
 
-    st.markdown("---")
-    st.subheader("Simuler une note")
-    if st.session_state.ue_data:
-        ue_to_sim = st.selectbox("UE à simuler :", options=list(st.session_state.ue_data.keys()), key="sim_ue")
-        new_note = st.number_input("Nouvelle note (0-20)", min_value=0.0, max_value=20.0, step=0.5, format="%.2f", key="sim_note")
-        if st.button("Simuler la note"):
-            grades = st.session_state.ue_data[ue_to_sim].get("grades", [])
-            for i, (note, poids) in enumerate(grades):
-                if note is None:
-                    grades[i] = (new_note, poids)
-                    st.session_state.ue_data[ue_to_sim]["grades"] = grades
-                    st.success(f"Note {new_note} ajoutée à '{ue_to_sim}'.")
-                    break
-            else:
-                st.warning("Aucun examen restant pour cette UE.")
+# ---------- AJOUT NOTE ----------
+st.sidebar.markdown("---")
+if st.session_state.ue_data:
+    st.sidebar.header("🧮 Ajouter une note")
+    ue_select = st.sidebar.selectbox("UE", options=list(st.session_state.ue_data.keys()))
+    note = st.sidebar.number_input("Note", 0.0, 20.0, step=0.5)
+    poids = st.sidebar.number_input("Poids", 0.0, 1.0, step=0.1, value=1.0)
+    if st.sidebar.button("Ajouter la note"):
+        st.session_state.ue_data[ue_select]["grades"].append((note, poids))
+        st.sidebar.success(f"Note {note} ajoutée à {ue_select}.")
+else:
+    st.sidebar.info("Ajoute d’abord une UE pour pouvoir entrer des notes.")
+
+# ---------- SECONDE CHANCE ----------
+st.sidebar.markdown("---")
+if st.session_state.ue_data:
+    st.sidebar.header("🎯 Seconde chance")
+    ue_sc = st.sidebar.selectbox("UE concernée", options=list(st.session_state.ue_data.keys()))
+    sc_note = st.sidebar.number_input("Note seconde chance", 0.0, 20.0, step=0.5)
+    if st.sidebar.button("Appliquer seconde chance"):
+        st.session_state.ue_data[ue_sc]["seconde_chance"] = sc_note
+        st.sidebar.success(f"Seconde chance {sc_note} appliquée à {ue_sc}.")
+
+# ---------- TABLEAU DES RESULTATS ----------
+st.markdown("## 📊 Résultats")
+if st.session_state.ue_data:
+    resultats, moyenne_generale, moyenne_min_restante, ue_modifiables = calculer_moyennes(st.session_state.ue_data)
+
+    st.table([{"UE": ue, "Moyenne": moyenne, "Statut": statut} for ue, moyenne, statut in resultats])
+
+    st.markdown(f"### Moyenne Générale : **{moyenne_generale:.2f}/20**")
+    if moyenne_generale >= 10:
+        st.success("Moyenne générale validée ✅")
     else:
-        st.info("Chargez un jeu de données pour simuler des notes.")
+        st.error("Moyenne générale insuffisante ❌")
 
-    st.markdown("---")
-    st.subheader("Définir une seconde chance")
-    if st.session_state.ue_data:
-        ue_sc = st.selectbox("UE pour seconde chance :", options=list(st.session_state.ue_data.keys()), key="sc_ue")
-        sc_note = st.number_input("Note seconde chance (0-20)", min_value=0.0, max_value=20.0, step=0.5, format="%.2f", key="sc_note")
-        if st.button("Appliquer seconde chance"):
-            st.session_state.ue_data[ue_sc]["seconde_chance"] = sc_note
-            st.success(f"Seconde chance pour '{ue_sc}' définie à {sc_note}.")
+    if moyenne_min_restante is not None:
+        st.info(f"📌 Moyenne minimale requise pour valider : **{moyenne_min_restante:.2f}/20**")
     else:
-        st.info("Chargez un jeu de données pour définir une seconde chance.")
+        st.success("Toutes les notes sont renseignées 🎉")
 
-    st.markdown("---")
-    if st.session_state.ue_data:
-        # Export CSV (streamlit download)
-        def build_csv_string(ue_data_local):
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerow(["UE", "Moyenne", "Statut", "Seconde Chance"])
-            resultats, _, _, _ = calculer_moyennes(ue_data_local)
-            for ue, moyenne, statut in resultats:
-                note_sc = ue_data_local.get(ue, {}).get("seconde_chance", "N/A")
-                writer.writerow([ue, moyenne, statut, note_sc])
-            return output.getvalue().encode("utf-8")
+    st.progress(min(1.0, moyenne_generale / 20))
 
-        csv_bytes = build_csv_string(st.session_state.ue_data)
-        st.download_button("Exporter les résultats en CSV", data=csv_bytes, file_name="resultats.csv", mime="text/csv")
+    # Export CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["UE", "Moyenne", "Statut", "Seconde chance"])
+    for ue, moyenne, statut in resultats:
+        sc = st.session_state.ue_data[ue].get("seconde_chance", "—")
+        writer.writerow([ue, moyenne, statut, sc])
+    st.download_button("⬇️ Télécharger en CSV", output.getvalue().encode(), "resultats.csv", "text/csv")
 
-with col2:
-    st.subheader("Tableau des résultats")
-    if st.session_state.ue_data:
-        resultats, moyenne_generale, moyenne_min_restante, ue_modifiables = calculer_moyennes(st.session_state.ue_data)
-
-        # Affiche tableau
-        st.table([{"UE": ue, "Moyenne": moyenne, "Statut": statut} for ue, moyenne, statut in resultats])
-
-        # Moyenne générale
-        st.markdown(f"### Moyenne Générale : **{moyenne_generale:.2f}/20**")
-        if moyenne_generale >= 10:
-            st.success("Moyenne générale validée ✅")
-        else:
-            st.error("Moyenne générale insuffisante ❌")
-
-        # Moyenne minimale restante
-        if moyenne_min_restante is not None:
-            st.info(f"📌 Moyenne min nécessaire (pour compenser les notes manquantes) : **{moyenne_min_restante:.2f}/20**")
-        else:
-            st.success("✔ Toutes les notes sont déjà attribuées.")
-
-        # Barre de progression (0..20 -> 0..1 pour st.progress)
-        prog = max(0.0, min(1.0, moyenne_generale / 20.0))
-        st.progress(prog)
-
-        # Affiche UEs modifiables
-        if ue_modifiables:
-            st.write("UE modifiables (épreuves restantes) :", ", ".join(ue_modifiables))
-        else:
-            st.write("Aucune UE modifiable — toutes les épreuves sont notées.")
-    else:
-        st.info("Aucun jeu de données chargé. Sélectionne et charge un jeu de données à gauche.")
-
-# Footer / aide rapide
-st.markdown("---")
-st.caption("Application convertie de Tkinter -> Streamlit. Déployable sur Streamlit Cloud (gratuit) ou autres plateformes.")
+else:
+    st.info("Aucune UE encore ajoutée. Utilise le menu à gauche pour commencer.")
