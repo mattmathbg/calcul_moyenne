@@ -4,12 +4,11 @@ import csv
 import glob
 import importlib.util
 from typing import Dict, Any, List, Tuple
-import os
 
 # ---------- CONFIG ----------
-st.set_page_config(page_title="Calculateur de Moyenne — S5", layout="wide")
-st.title("🎓 Calculateur de Moyenne — S5")
-st.caption("Ajoute ou charge tes UEs, tes notes et découvre ta moyenne générale en temps réel.")
+st.set_page_config(page_title="Calculateur de Moyenne", layout="wide")
+st.title("🎓 Calculateur de Moyenne")
+st.caption("Choisis un dataset, puis les UEs et notes pour calculer ta moyenne.")
 
 # ---------- INIT SESSION ----------
 if "ue_data" not in st.session_state:
@@ -78,23 +77,28 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
 
     return resultats, moyenne_generale, moyenne_min_restante, ue_modifiables
 
-# ---------- CHARGEMENT AUTO DE TOUS LES UE DATA ----------
-ue_data_modules = {}
+# ---------- CHARGEMENT DYNAMIQUE ----------
+# On cherche tous les fichiers ue_data_*.py
+datasets = {}
 for filepath in glob.glob("ue_data_*.py"):
-    spec = importlib.util.spec_from_file_location("ue_data_module", filepath)
+    spec = importlib.util.spec_from_file_location("module", filepath)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     # récupère toutes les variables ue_data_*
     ue_vars = {k: v for k, v in vars(module).items() if k.startswith("ue_data_")}
-    ue_data_modules.update(ue_vars)
+    if ue_vars:
+        datasets[filepath] = ue_vars
 
-if ue_data_modules:
-    dataset_name = st.sidebar.selectbox("Choisis un dataset pré-rempli :", list(ue_data_modules.keys()))
+# ---------- SÉLECTION EN 2 ÉTAPES ----------
+if datasets:
+    dataset_file = st.sidebar.selectbox("Choisis un fichier dataset :", list(datasets.keys()))
+    ue_vars_in_file = datasets[dataset_file]
+    ue_var_name = st.sidebar.selectbox("Choisis le dataset à l'intérieur :", list(ue_vars_in_file.keys()))
     if st.sidebar.button("Charger ce dataset"):
-        st.session_state.ue_data = ue_data_modules[dataset_name]
-        st.sidebar.success(f"Dataset '{dataset_name}' chargé ✅")
+        st.session_state.ue_data = ue_vars_in_file[ue_var_name]
+        st.sidebar.success(f"Dataset '{ue_var_name}' chargé ✅")
 else:
-    st.sidebar.info("Aucun fichier 'ue_data_*.py' trouvé dans le repo.")
+    st.sidebar.info("Aucun fichier 'ue_data_*.py' trouvé.")
 
 # ---------- AJOUT UE ----------
 st.sidebar.header("➕ Ajouter une UE")
