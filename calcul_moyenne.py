@@ -10,15 +10,15 @@ st.caption("Choisis un dataset existant ou ajoute tes UEs et notes, puis découv
 
 # ---------- IMPORT DES DONNÉES ----------
 try:
-    import ue_data_s3  # ton fichier .py contenant ue_data_moi, ue_data_hugo, etc.
+    import ue_data_s5  # ton fichier .py contenant ue_data_moi, ue_data_hugo, etc.
 except ImportError:
-    st.error("Impossible de charger ue_data_s3.py")
+    st.error("Impossible de charger ue_data_s5.py")
     st.stop()
 
 # Récupère toutes les variables ue_data_* du fichier
 ENSEMBLES_DONNEES: Dict[str, Dict] = {
-    name: getattr(ue_data_s3, name)
-    for name in dir(ue_data_s3)
+    name: getattr(ue_data_s5, name)
+    for name in dir(ue_data_s5)
     if name.startswith("ue_data_")
 }
 
