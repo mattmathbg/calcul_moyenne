@@ -1,36 +1,44 @@
 # ue_data_s5.py
 
 ue_data_matteo = {
-    "Maths discrètes": {
-        "coef": 6,
-        "grades": [(15, 0.3), (17.5, 0.3), (9, 0.4)]  # Notes de E1, E2 et E3
-    },
-    "Algorithmique": {
+    "LF": {
         "coef": 3,
-        "grades": [(10.4, 0.3), (11.8, 0.3), (9.5, 0.4)]
+        "grades": [(0, 0.5), (0, 0.5)]  # Notes de E1, E2 et E3
     },
-    "Probabilités": {
+    "CPOOA": {
         "coef": 3,
-        "grades": [(10, 0.5), (14, 0.5)]
+        "grades": [(0, 0.5), (0, 0.5)]
     },
-    "BPOO": {
-        "coef": 6,
-        "grades": [(13.25, 0.3), (11, 0.3), (10, 0.4)]
-    },
-    "Bases de données": {
+    "Stats": {
         "coef": 3,
-        "grades": [(14.26, 1)]
+        "grades": [(11, 0.5), (0, 0.5)]
     },
-    "Architecture des ordinateurs": {
+    "CMBD": {
         "coef": 3,
-        "grades": [(10.5, 0.3), (10, 0.3), (9, 0.4)]
+        "grades": [(0, 0.5), (0, 0.5)]
     },
-        "Anglais": {
+    "Application web": {
         "coef": 3,
-        "grades": [(7.6, 0.5), (12, 0.5)]
+        "grades": [(0, 0.5), (0, 0.25), (0, 0.25)]
     },
-        "Projet de synthese": {
+     "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.3), (10.5, 0.3), (11.5, 0.4)]
+        "grades": [(10.5, 0.5), (0,0.5)]
+    },
+     "Réseaux 2": {
+        "coef": 3,
+        "grades": [(11, 0.5), (0, 0.5)]
+    },
+    "Analyse de données": {
+        "coef": 3,
+        "grades": [(0, 0.5), (0, 0.5)]
+    },
+     "Anglais": {
+        "coef": 3,
+        "grades": [(0, 0.5), (0, 0.5)]
+    },
+     "AAS": {
+        "coef": 3,
+        "grades": [(0, 0.5), (0, 0.5)]
     },
 }
