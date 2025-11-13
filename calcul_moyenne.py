@@ -1,12 +1,13 @@
 import streamlit as st
 import io
 import csv
+import importlib.util
 from typing import Dict, Any, List, Tuple
 
 # ---------- CONFIG ----------
 st.set_page_config(page_title="Calculateur de Moyenne — S5", layout="wide")
 st.title("🎓 Calculateur de Moyenne — S5")
-st.caption("Ajoute tes UEs, tes notes et découvre ta moyenne générale en temps réel.")
+st.caption("Ajoute ou charge tes UEs, tes notes et découvre ta moyenne générale en temps réel.")
 
 # ---------- INIT SESSION ----------
 if "ue_data" not in st.session_state:
@@ -76,6 +77,28 @@ def calculer_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str,str,str]]
     return resultats, moyenne_generale, moyenne_min_restante, ue_modifiables
 
 
+# ---------- CHARGEMENT D'UN FICHIER ----------
+st.sidebar.header("📂 Charger des données existantes")
+uploaded_file = st.sidebar.file_uploader("Choisis un fichier `.py` (ex: ue_data_s5.py)", type=["py"])
+if uploaded_file is not None:
+    temp_path = "temp_ue_data.py"
+    with open(temp_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    spec = importlib.util.spec_from_file_location("ue_data", temp_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    ue_vars = {k: v for k, v in vars(module).items() if k.startswith("ue_data_")}
+    if ue_vars:
+        ue_selected_name = st.sidebar.selectbox("Choisis les données à charger :", list(ue_vars.keys()))
+        if st.sidebar.button("Charger ces données"):
+            st.session_state.ue_data = ue_vars[ue_selected_name]
+            st.sidebar.success(f"Données '{ue_selected_name}' chargées avec succès ✅")
+    else:
+        st.sidebar.warning("Aucune variable 'ue_data_' trouvée dans le fichier.")
+
+
 # ---------- AJOUT UE ----------
 st.sidebar.header("➕ Ajouter une UE")
 ue_name = st.sidebar.text_input("Nom de l'UE")
@@ -86,6 +109,7 @@ if st.sidebar.button("Ajouter l’UE"):
     else:
         st.session_state.ue_data[ue_name] = {"coef": coef, "grades": []}
         st.sidebar.success(f"UE '{ue_name}' ajoutée.")
+
 
 # ---------- AJOUT NOTE ----------
 st.sidebar.markdown("---")
@@ -100,6 +124,7 @@ if st.session_state.ue_data:
 else:
     st.sidebar.info("Ajoute d’abord une UE pour pouvoir entrer des notes.")
 
+
 # ---------- SECONDE CHANCE ----------
 st.sidebar.markdown("---")
 if st.session_state.ue_data:
@@ -109,6 +134,7 @@ if st.session_state.ue_data:
     if st.sidebar.button("Appliquer seconde chance"):
         st.session_state.ue_data[ue_sc]["seconde_chance"] = sc_note
         st.sidebar.success(f"Seconde chance {sc_note} appliquée à {ue_sc}.")
+
 
 # ---------- TABLEAU DES RESULTATS ----------
 st.markdown("## 📊 Résultats")
@@ -138,6 +164,5 @@ if st.session_state.ue_data:
         sc = st.session_state.ue_data[ue].get("seconde_chance", "—")
         writer.writerow([ue, moyenne, statut, sc])
     st.download_button("⬇️ Télécharger en CSV", output.getvalue().encode(), "resultats.csv", "text/csv")
-
 else:
-    st.info("Aucune UE encore ajoutée. Utilise le menu à gauche pour commencer.")
+    st.info("Aucune UE encore ajoutée. Utilise le menu à gauche ou charge un fichier .py.")
