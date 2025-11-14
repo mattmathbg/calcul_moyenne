@@ -3,7 +3,7 @@
 ue_data_matteo = {
     "LF": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
+        "grades": [(8, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
     },
     "CPOOA": {
         "coef": 3,

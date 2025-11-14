@@ -154,25 +154,15 @@ if st.session_state.ue_data:
     fig = px.bar(df, x="UE", y="Moyenne", title="Moyenne par UE")
     st.plotly_chart(fig, use_container_width=True)
 
-# Assure-toi que le dataframe df est défini avant la section de simulation
-if st.session_state.ue_data:
-    resultats, moyenne_generale, min_restante = calcul_moyennes(st.session_state.ue_data)
-    df = pd.DataFrame(resultats, columns=["UE", "Moyenne", "Statut"])
+# ---------- SIMULATION / PRÉDICTION AMÉLIORÉE ----------
+st.markdown("### 🔮 Prédiction améliorée : calculer la note nécessaire ou simuler une note")
 
-    # Affichage tableau
-    st.dataframe(df, use_container_width=True)
-
-    # ---------- SIMULATION / PRÉDICTION AMÉLIORÉE ----------
-    st.markdown("### 🔮 Simulation et prédiction améliorée")
-
-    ue_sim = st.selectbox("UE à considérer", df["UE"].tolist())
-    mode_pred = st.radio("Type de prédiction", [
-        "Simuler une note", 
-        "Calculer la note nécessaire pour valider l'UE", 
-        "Calculer la note nécessaire pour atteindre une moyenne générale cible"
-    ], index=0)
-
-    # (Le reste de la simulation prédiction reste inchangé)
+ue_sim = st.selectbox("UE à considérer", df["UE"].tolist())
+mode_pred = st.radio("Type de prédiction", [
+    "Simuler une note", 
+    "Calculer la note nécessaire pour valider l'UE", 
+    "Calculer la note nécessaire pour atteindre une moyenne générale cible"
+], index=0)
 
 if mode_pred == "Simuler une note":
     new_note = st.slider("Note simulée", 0.0, 20.0, 10.0, 0.5)
