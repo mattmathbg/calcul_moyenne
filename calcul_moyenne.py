@@ -177,8 +177,7 @@ def calcul_metriques(data):
     moyenne_gen_actuelle = total_points_actuel / total_coef_actuel if total_coef_actuel > 0 else 0.0
     moyenne_gen_pessimiste = total_points_pessimiste / total_coef_pessimiste if total_coef_pessimiste > 0 else 0.0
 
-    return resultats_detail, moyenne_gen_actuelle, moyenne_gen_pessimiste, ue_validees, ue_total
-
+    return resultats_detail, moyenne_gen_actuelle, moyenne_gen_pessimiste, ue_validees, ue_total, total_coef_pessimiste
 # ---------- SIDEBAR (MENU) ----------
 with st.sidebar:
     st.header("⚙️ Configuration")
