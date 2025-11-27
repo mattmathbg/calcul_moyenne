@@ -278,7 +278,15 @@ with tab2:
             curr_data = st.session_state.ue_data[ue_select]
             
             # Modifier le coefficient et la SC de l'UE
-            curr_data["coef"] = st.number_input("Coefficient de l'UE", 1.0, 20.0, curr_data.get("coef", 1.0), key=f"coef_{ue_select}")
+            # CORRECTION APPLIQUÉE : Assurer que la valeur (value) est toujours un float.
+            curr_data["coef"] = st.number_input(
+                "Coefficient de l'UE", 
+                min_value=1.0, 
+                max_value=20.0, 
+                value=float(curr_data.get("coef", 1.0)), # <- Convertir la valeur par défaut en float
+                key=f"coef_{ue_select}"
+            )
+            # st.number_input pour la SC est correcte car vous utilisez `None` si vide.
             curr_data["sc"] = st.number_input("Note Seconde Chance", 0.0, 20.0, curr_data.get("sc"), key=f"sc_{ue_select}", help="Laissez vide pour désactiver.")
             
             # DataFrame pour l'éditeur
