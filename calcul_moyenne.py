@@ -220,8 +220,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "
 
 # === TAB 1: DASHBOARD ===
 with tab1:
-    details, moy_actuelle, moy_pessimiste, valides, total_ues = calcul_metriques(st.session_state.ue_data)
-    
+    details, moy_actuelle, moy_pessimiste, valides, total_ues, total_coef_pessimiste = calcul_metriques(st.session_state.ue_data)    
     if not st.session_state.ue_data:
         st.info("👈 Utilisez le menu à gauche pour charger un fichier 'ue_data_*.py' ou commencez manuellement.")
     else:
