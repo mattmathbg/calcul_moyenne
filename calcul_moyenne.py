@@ -10,7 +10,7 @@ import os
 
 # ---------- CONFIGURATION PAGE ----------
 st.set_page_config(
-    page_title="GradeMaster Pro + Git (V2.2)",
+    page_title="Calculateur de Moyenne 🎓",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -213,7 +213,7 @@ with st.sidebar:
         if st.button("Tout effacer", type="primary"): reset_app()
 
 # ---------- INTERFACE PRINCIPALE ----------
-st.title("🎓 GradeMaster Pro (V2.2)")
+st.title("Calculateur de Moyenne Étudiante 🎓")
 
 # Création des onglets
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw"])
