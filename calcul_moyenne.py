@@ -1,216 +1,275 @@
-# Nouveau code refactorisé avec :
-# - Fonction de calcul séparée dans un module interne
-# - Visualisation des moyennes
-# - Simulation "Et si...?"
-# - Nettoyage et améliorations diverses
-
 import streamlit as st
-import io
-import csv
-import glob
-import importlib.util
 import pandas as pd
 import plotly.express as px
-from typing import Dict, Any, List, Tuple
+import plotly.graph_objects as go
+import json
+import io
 
-# ---------- CONFIG ----------
-st.set_page_config(page_title="Calculateur de Moyenne", layout="wide")
-st.title("🎓 Calculateur de Moyenne")
-st.caption("Choisis un dataset, puis les UEs et notes pour calculer ta moyenne.")
+# ---------- CONFIGURATION PAGE ----------
+st.set_page_config(
+    page_title="GradeMaster Pro",
+    page_icon="🎓",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# ---------- INIT SESSION ----------
+# ---------- CSS PERSONNALISÉ ----------
+st.markdown("""
+    <style>
+    .metric-card {
+        background-color: #f0f2f6;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .stProgress > div > div > div > div {
+        background-image: linear-gradient(to right, #ff4b4b, #ffa425, #2ecc71);
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ---------- GESTION DE L'ÉTAT (SESSION) ----------
 if "ue_data" not in st.session_state:
-    st.session_state.ue_data: Dict[str, Dict[str, Any]] = {}
+    # Structure: { "NomUE": {"coef": float, "grades": [{"note": float, "poids": float}], "sc": float} }
+    st.session_state.ue_data = {}
 
+# ---------- FONCTIONS UTILITAIRES ----------
 
-# ---------- MODULE DE CALCUL SÉPARÉ ----------
-def calcul_moyennes(ue_data: Dict[str, Any]) -> Tuple[List[Tuple[str, str, str]], float, float or None]:
-    resultats = []
+def reset_app():
+    st.session_state.ue_data = {}
+    st.toast("Application réinitialisée !", icon="🗑️")
+
+def export_json():
+    return json.dumps(st.session_state.ue_data, indent=4)
+
+def load_json(uploaded_file):
+    try:
+        data = json.load(uploaded_file)
+        st.session_state.ue_data = data
+        st.toast("Données chargées avec succès !", icon="✅")
+    except Exception as e:
+        st.error(f"Erreur lors du chargement : {e}")
+
+def calcul_metriques(data):
+    """Calcule toutes les stats nécessaires pour le dashboard"""
+    resultats_detail = []
+    total_points = 0
     total_coef = 0
-    somme_ponderee = 0
-    score_total = 0
-    poids_restants_total = 0
+    ue_validees = 0
+    ue_total = 0
 
-    for ue, data in ue_data.items():
-        coef = data.get("coef", 1)
-        notes = data.get("grades", [])
-        sc = data.get("seconde_chance")
+    for nom, details in data.items():
+        coef = details.get("coef", 1.0)
+        grades = details.get("grades", [])
+        sc = details.get("sc", None)
 
-        score = 0
-        poids_effectif = 0
-        poids_restants = 0
+        # Calcul moyenne brute de l'UE
+        numerateur = sum(g["note"] * g["poids"] for g in grades)
+        denominateur = sum(g["poids"] for g in grades)
+        
+        moyenne = numerateur / denominateur if denominateur > 0 else 0.0
 
-        for note, poids in notes:
-            if poids <= 0:
-                continue  # sécurité
-            if note is None:
-                poids_restants += poids
-            else:
-                score += note * poids
-                poids_effectif += poids
-
-        total_poids = poids_effectif + poids_restants
-        moyenne = score / total_poids if total_poids > 0 else 0
-
-        # seconde chance
+        # Application Seconde Chance
         if sc is not None:
-            moyenne = max(moyenne, 0.5 * moyenne + 0.5 * sc)
+            moyenne = max(moyenne, (moyenne + sc) / 2) # Exemple de règle (moyenne des deux)
+            # Note: Adapte la règle sc selon ton université (ex: max(moyenne, sc))
 
-        # statut
-        if moyenne >= 10:
-            statut = "✅ Validée"
-        elif poids_restants > 0:
-            manque = ((10 * total_poids) - score) / poids_restants
-            manque = max(0, min(20, manque))
-            statut = f"⚠ Besoin ≥ {manque:.2f}"
-        else:
-            statut = "❌ Non validée"
+        statut = "✅" if moyenne >= 10 else "❌"
+        if moyenne >= 10: ue_validees += 1
+        ue_total += 1
 
-        resultats.append((ue, f"{moyenne:.2f}", statut))
-
+        total_points += moyenne * coef
         total_coef += coef
-        somme_ponderee += moyenne * coef
-        score_total += score * coef
-        poids_restants_total += poids_restants * coef
 
-    moyenne_generale = somme_ponderee / total_coef if total_coef > 0 else 0
+        resultats_detail.append({
+            "UE": nom,
+            "Coef": coef,
+            "Moyenne": round(moyenne, 2),
+            "Statut": statut,
+            "Progression": min(1.0, denominateur) # Suppose que total poids attendu est 1.0
+        })
 
-    if poids_restants_total > 0:
-        min_globale = (10 * total_coef - score_total) / poids_restants_total
-        min_globale = max(0, min(20, min_globale))
+    moyenne_gen = total_points / total_coef if total_coef > 0 else 0.0
+    return resultats_detail, moyenne_gen, ue_validees, ue_total
+
+# ---------- SIDEBAR (MENU) ----------
+with st.sidebar:
+    st.header("⚙️ Configuration")
+    
+    # Import / Export
+    with st.expander("💾 Sauvegarde & Chargement"):
+        st.download_button("Télécharger mes données (JSON)", export_json(), "mes_notes.json", "application/json")
+        f = st.file_uploader("Charger un fichier", type="json")
+        if f: load_json(f)
+        if st.button("Tout effacer", type="primary"): reset_app()
+    
+    st.divider()
+    st.info("💡 Astuce : Passez par l'onglet 'Saisie' pour ajouter vos notes rapidement.")
+
+# ---------- INTERFACE PRINCIPALE ----------
+st.title("🎓 GradeMaster Pro")
+st.markdown("Suivez vos résultats, simulez vos examens et validez votre année.")
+
+# Création des onglets
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw"])
+
+# === TAB 1: TABLEAU DE BORD ===
+with tab1:
+    details, moy_gen, valides, total_ues = calcul_metriques(st.session_state.ue_data)
+    
+    if not st.session_state.ue_data:
+        st.warning("Aucune donnée. Commencez par ajouter des UEs dans l'onglet 'Saisie' !")
     else:
-        min_globale = None
+        # KPI Row
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Moyenne Générale", f"{moy_gen:.2f}/20", delta=f"{moy_gen-10:.2f} vs validation")
+        col2.metric("UE Validées", f"{valides}/{total_ues}")
+        col3.metric("Crédits (Coefs)", sum(d['Coef'] for d in details))
 
-    return resultats, moyenne_generale, min_globale
+        # Graphiques
+        c1, c2 = st.columns([1, 2])
+        
+        with c1:
+            # Jauge
+            fig_gauge = go.Figure(go.Indicator(
+                mode = "gauge+number",
+                value = moy_gen,
+                title = {'text': "Performance"},
+                gauge = {
+                    'axis': {'range': [0, 20]},
+                    'bar': {'color': "darkblue"},
+                    'steps' : [
+                        {'range': [0, 10], 'color': "#ffe0e0"},
+                        {'range': [10, 12], 'color': "#fff4e0"},
+                        {'range': [12, 20], 'color': "#e0ffe0"}],
+                    'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 10}
+                }
+            ))
+            fig_gauge.update_layout(height=300, margin=dict(l=20,r=20,t=50,b=20))
+            st.plotly_chart(fig_gauge, use_container_width=True)
 
+        with c2:
+            # Bar Chart coloré
+            if details:
+                df_res = pd.DataFrame(details)
+                df_res['Color'] = df_res['Moyenne'].apply(lambda x: '#2ecc71' if x >= 10 else '#e74c3c')
+                
+                fig_bar = px.bar(
+                    df_res, x="UE", y="Moyenne", 
+                    text="Moyenne",
+                    title="Résultats par Unité d'Enseignement"
+                )
+                fig_bar.update_traces(marker_color=df_res['Color'], textposition='outside')
+                fig_bar.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
+                fig_bar.update_layout(yaxis_range=[0, 22])
+                st.plotly_chart(fig_bar, use_container_width=True)
 
-# ---------- CHARGEMENT DYNAMIQUE DES DATASETS ----------
-datasets = {}
-for filepath in glob.glob("ue_data_*.py"):
-    spec = importlib.util.spec_from_file_location("module", filepath)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    ue_vars = {k: v for k, v in vars(module).items() if k.startswith("ue_data_")}
-    if ue_vars:
-        datasets[filepath] = ue_vars
+# === TAB 2: SAISIE & UEs ===
+with tab2:
+    c_add, c_edit = st.columns([1, 2])
+    
+    with c_add:
+        st.subheader("➕ Nouvelle UE")
+        new_ue_name = st.text_input("Nom de l'UE (ex: Mathématiques)")
+        new_ue_coef = st.number_input("Coefficient", 1.0, 20.0, step=0.5)
+        if st.button("Créer l'UE"):
+            if new_ue_name and new_ue_name not in st.session_state.ue_data:
+                st.session_state.ue_data[new_ue_name] = {"coef": new_ue_coef, "grades": [], "sc": None}
+                st.success(f"UE '{new_ue_name}' ajoutée !")
+                st.rerun()
+            elif new_ue_name in st.session_state.ue_data:
+                st.error("Cette UE existe déjà.")
 
-# ---------- SÉLECTION EN 2 ÉTAPES ----------
-st.sidebar.header("📁 Chargement dataset")
-if datasets:
-    dataset_file = st.sidebar.selectbox("Fichier :", list(datasets.keys()))
-    ue_vars = datasets[dataset_file]
-    choix = st.sidebar.selectbox("Dataset :", list(ue_vars.keys()))
-    if st.sidebar.button("Charger"):
-        st.session_state.ue_data = ue_vars[choix]
-        st.sidebar.success("Dataset chargé !")
-else:
-    st.sidebar.info("Aucun fichier 'ue_data_*.py' trouvé.")
+    with c_edit:
+        st.subheader("✏️ Gestion des Notes")
+        if st.session_state.ue_data:
+            ue_select = st.selectbox("Choisir l'UE à modifier", list(st.session_state.ue_data.keys()))
+            
+            # Récupération des données pour l'éditeur
+            current_grades = st.session_state.ue_data[ue_select]["grades"]
+            df_grades = pd.DataFrame(current_grades)
+            
+            if df_grades.empty:
+                df_grades = pd.DataFrame(columns=["note", "poids"])
 
-# ---------- AJOUT UE ----------
-st.sidebar.header("➕ Ajouter une UE")
-nom_ue = st.sidebar.text_input("Nom de l'UE")
-coef = st.sidebar.number_input("Coefficient", min_value=0.5, max_value=10.0, value=1.0, step=0.5)
-if st.sidebar.button("Ajouter l’UE"):
-    if nom_ue.strip():
-        st.session_state.ue_data[nom_ue] = {"coef": coef, "grades": []}
-        st.sidebar.success("UE ajoutée !")
+            st.caption("Ajoutez ou modifiez les lignes ci-dessous. Poids total recommandé = 1.0")
+            edited_df = st.data_editor(
+                df_grades, 
+                num_rows="dynamic", 
+                column_config={
+                    "note": st.column_config.NumberColumn("Note /20", min_value=0, max_value=20, step=0.5),
+                    "poids": st.column_config.NumberColumn("Poids (0 à 1)", min_value=0, max_value=1, step=0.1)
+                },
+                key=f"editor_{ue_select}"
+            )
+
+            # Bouton de sauvegarde explicite pour confirmer les changements complexes
+            if st.button("💾 Enregistrer les notes pour " + ue_select):
+                # Conversion du DF en liste de dicts
+                new_grades = edited_df.to_dict('records')
+                # Nettoyage (suppression des lignes vides si nécessaire)
+                clean_grades = [g for g in new_grades if not pd.isna(g['note'])]
+                st.session_state.ue_data[ue_select]["grades"] = clean_grades
+                st.toast("Notes mises à jour !", icon="💾")
+                st.rerun()
+
+            # Gestion coef et seconde chance
+            with st.expander("Options avancées UE"):
+                new_coef = st.number_input("Modifier Coefficient", value=st.session_state.ue_data[ue_select]['coef'])
+                sc_val = st.number_input("Note Seconde Chance (laisser 0 si aucune)", 
+                                       value=st.session_state.ue_data[ue_select].get('sc') or 0.0)
+                
+                if st.button("Mettre à jour paramètres"):
+                    st.session_state.ue_data[ue_select]['coef'] = new_coef
+                    st.session_state.ue_data[ue_select]['sc'] = sc_val if sc_val > 0 else None
+                    st.rerun()
+                
+                if st.button("🗑️ Supprimer cette UE", type="primary"):
+                    del st.session_state.ue_data[ue_select]
+                    st.rerun()
+
+        else:
+            st.info("Créez une UE à gauche pour commencer.")
+
+# === TAB 3: SIMULATION ===
+with tab3:
+    st.subheader("🔮 Simulateur 'Et si...?'")
+    if not st.session_state.ue_data:
+        st.warning("Il faut des données pour simuler.")
     else:
-        st.sidebar.warning("Nom invalide.")
+        st.markdown("Simulez une note dans une UE pour voir l'impact sur votre moyenne générale.")
+        
+        sim_ue = st.selectbox("UE à simuler", list(st.session_state.ue_data.keys()), key="sim_select")
+        
+        # Calcul actuel
+        data_copy = json.loads(json.dumps(st.session_state.ue_data)) # Deep copy
+        current_grades = data_copy[sim_ue]['grades']
+        poids_actuel = sum(g['poids'] for g in current_grades)
+        poids_restant = max(0.0, 1.0 - poids_actuel)
+        
+        col_sim1, col_sim2 = st.columns(2)
+        
+        with col_sim1:
+            st.write(f"Poids notes actuelles : **{poids_actuel:.2f}**")
+            st.write(f"Poids restant théorique : **{poids_restant:.2f}**")
+            
+            sim_note = st.slider("Note hypothétique", 0.0, 20.0, 10.0, 0.5)
+            sim_poids = st.slider("Poids de cette note", 0.1, 1.0, min(0.5, poids_restant) if poids_restant > 0 else 0.5)
+        
+        with col_sim2:
+            # Ajout temporaire pour calcul
+            data_copy[sim_ue]['grades'].append({"note": sim_note, "poids": sim_poids})
+            _, sim_moy_gen, _, _ = calcul_metriques(data_copy)
+            
+            delta = sim_moy_gen - moy_gen
+            st.metric("Nouvelle Moyenne Générale", f"{sim_moy_gen:.2f}", delta=f"{delta:+.2f}")
+            
+            if sim_moy_gen >= 10 and moy_gen < 10:
+                st.balloons()
+                st.success("🎉 Cette note vous permettrait de valider l'année !")
 
-# ---------- AJOUT NOTE ----------
-st.sidebar.header("🧮 Ajouter une note")
-if st.session_state.ue_data:
-    ue_sel = st.sidebar.selectbox("UE :", list(st.session_state.ue_data.keys()))
-    note = st.sidebar.number_input("Note", min_value=0.0, max_value=20.0, step=0.5)
-    poids = st.sidebar.number_input("Poids (0-1)", min_value=0.0, max_value=1.0, value=1.0, step=0.1)
-    if st.sidebar.button("Ajouter la note"):
-        st.session_state.ue_data[ue_sel]["grades"].append((note, poids))
-        st.sidebar.success("Note ajoutée !")
-
-# ---------- SECONDE CHANCE ----------
-st.sidebar.header("🎯 Seconde chance")
-if st.session_state.ue_data:
-    ue_sc = st.sidebar.selectbox("UE :", list(st.session_state.ue_data.keys()), key="sec")
-    sc_note = st.sidebar.number_input("Note seconde chance", 0.0, 20.0, step=0.5)
-    if st.sidebar.button("Appliquer"):
-        st.session_state.ue_data[ue_sc]["seconde_chance"] = sc_note
-        st.sidebar.success("Seconde chance appliquée !")
-
-# ---------- CALCUL PRINCIPAL ----------
-st.markdown("## 📊 Résultats")
-if st.session_state.ue_data:
-    resultats, moyenne_generale, min_restante = calcul_moyennes(st.session_state.ue_data)
-
-    df = pd.DataFrame(resultats, columns=["UE", "Moyenne", "Statut"])
-    st.dataframe(df, use_container_width=True)
-
-    st.subheader(f"Moyenne Générale : {moyenne_generale:.2f}/20")
-    st.progress(min(1.0, moyenne_generale / 20))
-
-    if min_restante is not None:
-        st.info(f"📌 Moyenne minimale restante pour valider : **{min_restante:.2f}/20**")
-
-    # ---------- GRAPHIQUE ----------
-    fig = px.bar(df, x="UE", y="Moyenne", title="Moyenne par UE")
-    st.plotly_chart(fig, use_container_width=True)
-
-# ---------- SIMULATION / PRÉDICTION AMÉLIORÉE ----------
-st.markdown("### 🔮 Prédiction améliorée : calculer la note nécessaire ou simuler une note")
-
-ue_sim = st.selectbox("UE à considérer", df["UE"].tolist())
-mode_pred = st.radio("Type de prédiction", [
-    "Simuler une note", 
-    "Calculer la note nécessaire pour valider l'UE", 
-    "Calculer la note nécessaire pour atteindre une moyenne générale cible"
-], index=0)
-
-if mode_pred == "Simuler une note":
-    new_note = st.slider("Note simulée", 0.0, 20.0, 10.0, 0.5)
-    ue_data_sim = {k: {'coef': v['coef'], 'grades': v['grades'][:], 'seconde_chance': v.get('seconde_chance')} for k, v in st.session_state.ue_data.items()}
-    ue_data_sim[ue_sim]['grades'].append((new_note, 1.0))
-    _, moyenne_proj, _ = calcul_moyennes(ue_data_sim)
-    st.info(f"Avec cette note simulée, la moyenne générale serait **{moyenne_proj:.2f}/20**.")
-
-elif mode_pred == "Calculer la note nécessaire pour valider l'UE":
-    ue_obj = st.session_state.ue_data[ue_sim]
-    score = sum(n * p for n, p in ue_obj['grades'] if n is not None)
-    poids_deja = sum(p for n, p in ue_obj['grades'] if n is not None)
-    poids_restants = 1.0 - poids_deja
-    if poids_restants <= 0:
-        st.warning("Cette UE n'a plus de place pour ajouter une note.")
-    else:
-        note_min = (10 - (score / (poids_deja + poids_restants))) / poids_restants
-        note_min = max(0, min(20, note_min))
-        st.info(f"Pour valider **{ue_sim}**, tu dois obtenir **au moins {note_min:.2f}/20** sur la prochaine évaluation.")
-
-elif mode_pred == "Calculer la note nécessaire pour atteindre une moyenne générale cible":
-    cible = st.slider("Objectif de moyenne générale", 10.0, 20.0, 12.0, 0.5)
-    total_coef = sum(v['coef'] for v in st.session_state.ue_data.values())
-    points_cibles = cible * total_coef
-    points_actuels = 0
-    poids_restants_total = 0
-    for ue, data in st.session_state.ue_data.items():
-        coef = data['coef']
-        notes = data['grades']
-        score = sum(n * p for n, p in notes if n is not None)
-        poids_deja = sum(p for n, p in notes if n is not None)
-        poids_restants = max(0, 1.0 - poids_deja)
-        points_actuels += score * coef
-        poids_restants_total += poids_restants * coef
-    if poids_restants_total <= 0:
-        st.warning("Impossible : aucun poids disponible pour augmenter la moyenne.")
-    else:
-        note_min_globale = (points_cibles - points_actuels) / poids_restants_total
-        note_min_globale = max(0, min(20, note_min_globale))
-        st.info(f"Pour atteindre **{cible}/20**, il te faut obtenir en moyenne **{note_min_globale:.2f}/20** sur les évaluations restantes.")
-
-    # ---------- EXPORT CSV ----------
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["UE", "Moyenne", "Statut"])
-    for ue, moy, statut in resultats:
-        writer.writerow([ue, moy, statut])
-
-    st.download_button("⬇️ Télécharger CSV", output.getvalue(), "resultats.csv", "text/csv")
-else:
-    st.info("Ajoute ou charge d'abord une UE.")
+# === TAB 4: RAW DATA ===
+with tab4:
+    st.markdown("### Vue tabulaire complète")
+    if details:
+        st.dataframe(pd.DataFrame(details), use_container_width=True)
