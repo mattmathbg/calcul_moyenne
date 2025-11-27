@@ -10,7 +10,7 @@ import os
 
 # ---------- CONFIGURATION PAGE ----------
 st.set_page_config(
-    page_title="GradeMaster Pro + Git",
+    page_title="GradeMaster Pro + Git (V2.2)",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -40,8 +40,7 @@ if "ue_data" not in st.session_state:
 def normaliser_donnees(data_raw):
     """
     Convertit les données brutes (format V1 avec tuples) vers le format V2 (avec dicts)
-    V1: grades = [(10, 1.0)]
-    V2: grades = [{'note': 10, 'poids': 1.0}]
+    et assure que toutes les notes non remplies sont None.
     """
     data_propre = {}
     for ue, details in data_raw.items():
@@ -55,12 +54,24 @@ def normaliser_donnees(data_raw):
         # Conversion des notes
         raw_grades = details.get("grades", [])
         for g in raw_grades:
+            note = None
+            poids = None
+            
             if isinstance(g, (list, tuple)) and len(g) >= 2:
-                # Conversion Tuple -> Dict
-                nouvelle_ue["grades"].append({"note": g[0], "poids": g[1]})
+                # V1: Tuple (note, poids)
+                note = g[0]
+                poids = g[1]
             elif isinstance(g, dict):
-                # Déjà au bon format
-                nouvelle_ue["grades"].append(g)
+                # V2: Dict {'note': x, 'poids': y}
+                note = g.get("note")
+                poids = g.get("poids")
+                
+            # Assure que la note est None si elle n'est pas un nombre
+            if note == '': note = None 
+            if isinstance(note, str) and not note.replace('.', '', 1).isdigit():
+                note = None
+            
+            nouvelle_ue["grades"].append({"note": note, "poids": poids})
                 
         data_propre[ue] = nouvelle_ue
     return data_propre
@@ -91,10 +102,14 @@ def reset_app():
     st.toast("Application réinitialisée !", icon="🗑️")
 
 def calcul_metriques(data):
-    """Calcule toutes les stats pour le dashboard"""
+    """
+    Calcule toutes les stats pour le dashboard, y compris la moyenne pessimiste.
+    """
     resultats_detail = []
-    total_points = 0
-    total_coef = 0
+    total_points_actuel = 0.0
+    total_coef_actuel = 0.0 # Coef des UEs avec au moins une note reçue
+    total_points_pessimiste = 0.0
+    total_coef_pessimiste = 0.0 # Coef de toutes les UEs définies
     ue_validees = 0
     ue_total = 0
 
@@ -103,30 +118,66 @@ def calcul_metriques(data):
         grades = details.get("grades", [])
         sc = details.get("sc", None)
 
-        numerateur = sum(g["note"] * g["poids"] for g in grades if g["note"] is not None)
-        denominateur = sum(g["poids"] for g in grades if g["note"] is not None)
+        # 1. Calcul de la Moyenne Actuelle (uniquement les notes reçues)
+        num_actuel = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+        den_actuel = sum(g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
         
-        moyenne = numerateur / denominateur if denominateur > 0 else 0.0
+        moyenne_ue_actuelle = num_actuel / den_actuel if den_actuel > 0 else 0.0
 
+        # 2. Calcul de la Moyenne Pessimiste (notes reçues + 0 pour les manquantes)
+        num_pessimiste = 0.0
+        den_pessimiste = sum(g["poids"] for g in grades if g.get("poids") is not None)
+        
+        for g in grades:
+            note = g.get("note")
+            poids = g.get("poids")
+            if poids is not None and poids > 0:
+                if note is not None:
+                    # Grade reçu
+                    num_pessimiste += note * poids
+                # Si note est None, on assume 0/20, donc 0 * poids.
+        
+        moyenne_ue_pessimiste = num_pessimiste / den_pessimiste if den_pessimiste > 0 else 0.0
+        
+        # --- Application de la Seconde Chance (SC) ---
+        moyenne_ue_actuelle_sc = moyenne_ue_actuelle
+        moyenne_ue_pessimiste_sc = moyenne_ue_pessimiste
+        
         if sc is not None:
-            moyenne = max(moyenne, (moyenne + sc) / 2)
+            moyenne_ue_actuelle_sc = max(moyenne_ue_actuelle, (moyenne_ue_actuelle + sc) / 2)
+            moyenne_ue_pessimiste_sc = max(moyenne_ue_pessimiste, (moyenne_ue_pessimiste + sc) / 2)
 
-        statut = "✅" if moyenne >= 10 else "❌"
-        if moyenne >= 10: ue_validees += 1
-        ue_total += 1
+        # --- Mise à Jour des Totaux Globaux ---
 
-        total_points += moyenne * coef
-        total_coef += coef
+        # 1. Total Actuel (pour l'affichage de la moyenne Actuelle et le tableau de détails)
+        if den_actuel > 0:
+            total_points_actuel += moyenne_ue_actuelle_sc * coef
+            total_coef_actuel += coef
 
-        resultats_detail.append({
-            "UE": nom,
-            "Coef": coef,
-            "Moyenne": round(moyenne, 2),
-            "Statut": statut
-        })
+            statut = "✅" if moyenne_ue_actuelle_sc >= 10 else "❌"
+            if moyenne_ue_actuelle_sc >= 10: ue_validees += 1
+            ue_total += 1 # Compte les UEs avec au moins une note
 
-    moyenne_gen = total_points / total_coef if total_coef > 0 else 0.0
-    return resultats_detail, moyenne_gen, ue_validees, ue_total
+            resultats_detail.append({
+                "UE": nom,
+                "Coef": coef,
+                "Moyenne": round(moyenne_ue_actuelle_sc, 2), # Affiche la moyenne actuelle dans le tableau
+                "Statut": statut
+            })
+        elif den_pessimiste > 0:
+            # Si aucune note reçue, mais des notes prévues, on compte l'UE
+            ue_total += 1
+
+        # 2. Total Pessimiste (pour l'affichage de la moyenne Pessimiste)
+        if den_pessimiste > 0:
+            total_points_pessimiste += moyenne_ue_pessimiste_sc * coef
+            total_coef_pessimiste += coef
+        
+    # --- Moyennes Générales Finales ---
+    moyenne_gen_actuelle = total_points_actuel / total_coef_actuel if total_coef_actuel > 0 else 0.0
+    moyenne_gen_pessimiste = total_points_pessimiste / total_coef_pessimiste if total_coef_pessimiste > 0 else 0.0
+
+    return resultats_detail, moyenne_gen_actuelle, moyenne_gen_pessimiste, ue_validees, ue_total
 
 # ---------- SIDEBAR (MENU) ----------
 with st.sidebar:
@@ -144,7 +195,7 @@ with st.sidebar:
             
             if st.button("Charger ce dataset"):
                 raw_data = vars_dispo[dataset_choisi]
-                # On convertit les données pour qu'elles matchent le format V2
+                # Conversion des données pour qu'elles matchent le format V2
                 st.session_state.ue_data = normaliser_donnees(raw_data)
                 st.toast(f"Dataset '{dataset_choisi}' chargé !", icon="🚀")
                 st.rerun()
@@ -163,27 +214,34 @@ with st.sidebar:
         if st.button("Tout effacer", type="primary"): reset_app()
 
 # ---------- INTERFACE PRINCIPALE ----------
-st.title("🎓 GradeMaster Pro")
+st.title("🎓 GradeMaster Pro (V2.2)")
 
 # Création des onglets
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw"])
 
 # === TAB 1: DASHBOARD ===
 with tab1:
-    details, moy_gen, valides, total_ues = calcul_metriques(st.session_state.ue_data)
+    details, moy_actuelle, moy_pessimiste, valides, total_ues = calcul_metriques(st.session_state.ue_data)
     
     if not st.session_state.ue_data:
         st.info("👈 Utilisez le menu à gauche pour charger un fichier 'ue_data_*.py' ou commencez manuellement.")
     else:
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Moyenne Générale", f"{moy_gen:.2f}/20", delta=f"{moy_gen-10:.2f} vs val.")
-        col2.metric("UE Validées", f"{valides}/{total_ues}")
-        col3.metric("Crédits", sum(d['Coef'] for d in details))
+        # Affichage des deux moyennes et des métriques
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Moyenne Actuelle", f"{moy_actuelle:.2f}/20", 
+                    delta=f"{moy_actuelle-10:.2f} vs val. (Notes reçues)", 
+                    delta_color="normal" if moy_actuelle >= 10 else "inverse")
+        col2.metric("Moyenne Pessimiste", f"{moy_pessimiste:.2f}/20", 
+                    delta=f"{moy_pessimiste-10:.2f} vs val. (Notes manquantes à 0)", 
+                    delta_color="normal" if moy_pessimiste >= 10 else "inverse")
+        col3.metric("UE Validées", f"{valides}/{total_ues}")
+        col4.metric("Coefficients Totaux", total_coef_pessimiste) # Utilise le coefficient total de toutes les UEs
 
         c1, c2 = st.columns([1, 2])
         with c1:
+            # Jauge basée sur la moyenne actuelle
             fig_gauge = go.Figure(go.Indicator(
-                mode = "gauge+number", value = moy_gen, title = {'text': "Moyenne"},
+                mode = "gauge+number", value = moy_actuelle, title = {'text': "Moyenne Actuelle"},
                 gauge = {'axis': {'range': [0, 20]}, 
                          'bar': {'color': "#2b86d9"},
                          'steps': [{'range': [0, 10], 'color': "#ffe0e0"}, {'range': [10, 20], 'color': "#e0ffe0"}],
@@ -196,7 +254,7 @@ with tab1:
             if details:
                 df_res = pd.DataFrame(details)
                 df_res['Color'] = df_res['Moyenne'].apply(lambda x: '#2ecc71' if x >= 10 else '#e74c3c')
-                fig_bar = px.bar(df_res, x="UE", y="Moyenne", text="Moyenne", title="Résultats par UE")
+                fig_bar = px.bar(df_res, x="UE", y="Moyenne", text="Moyenne", title="Résultats par UE (Notes Reçues)")
                 fig_bar.update_traces(marker_color=df_res['Color'], textposition='outside')
                 fig_bar.add_hline(y=10, line_dash="dash", line_color="black")
                 st.plotly_chart(fig_bar, use_container_width=True)
@@ -208,9 +266,11 @@ with tab2:
         st.subheader("➕ Ajouter une UE")
         new_ue_name = st.text_input("Nom UE")
         new_ue_coef = st.number_input("Coef", 1.0, 20.0, step=0.5)
+        # Ajout de l'option de Seconde Chance
+        new_ue_sc = st.number_input("Note Seconde Chance (Optionnel)", 0.0, 20.0, None, step=0.5)
         if st.button("Créer"):
             if new_ue_name:
-                st.session_state.ue_data[new_ue_name] = {"coef": new_ue_coef, "grades": [], "sc": None}
+                st.session_state.ue_data[new_ue_name] = {"coef": new_ue_coef, "grades": [], "sc": new_ue_sc}
                 st.rerun()
 
     with c_edit:
@@ -219,6 +279,10 @@ with tab2:
             ue_select = st.selectbox("UE à modifier", list(st.session_state.ue_data.keys()))
             curr_data = st.session_state.ue_data[ue_select]
             
+            # Modifier le coefficient et la SC de l'UE
+            curr_data["coef"] = st.number_input("Coefficient de l'UE", 1.0, 20.0, curr_data.get("coef", 1.0), key=f"coef_{ue_select}")
+            curr_data["sc"] = st.number_input("Note Seconde Chance", 0.0, 20.0, curr_data.get("sc"), key=f"sc_{ue_select}", help="Laissez vide pour désactiver.")
+            
             # DataFrame pour l'éditeur
             df_grades = pd.DataFrame(curr_data["grades"])
             if df_grades.empty: df_grades = pd.DataFrame(columns=["note", "poids"])
@@ -226,13 +290,20 @@ with tab2:
             edited_df = st.data_editor(
                 df_grades, num_rows="dynamic",
                 column_config={
-                    "note": st.column_config.NumberColumn("Note", min_value=0, max_value=20, step=0.5),
-                    "poids": st.column_config.NumberColumn("Poids (0-1)", min_value=0, max_value=1, step=0.1)
+                    "note": st.column_config.NumberColumn("Note (laissez vide si non reçue)", min_value=0.0, max_value=20.0, step=0.5),
+                    "poids": st.column_config.NumberColumn("Poids", min_value=0.0, max_value=1.0, step=0.1, help="Doit être 1.0 au total par UE.")
                 }, key=f"ed_{ue_select}"
             )
 
-            if st.button("💾 Sauvegarder notes"):
-                clean = [g for g in edited_df.to_dict('records') if not pd.isna(g['note'])]
+            if st.button("💾 Sauvegarder notes & paramètres UE"):
+                # Nettoyage des données
+                clean = [g for g in edited_df.to_dict('records') if g.get('poids') is not None and g.get('poids') > 0]
+                
+                # Assurer que les notes sont None si elles sont vides/non numériques
+                for item in clean:
+                    if not isinstance(item['note'], (int, float)):
+                        item['note'] = None
+                        
                 st.session_state.ue_data[ue_select]["grades"] = clean
                 st.toast("Sauvegardé !", icon="✅")
                 st.rerun()
@@ -241,6 +312,10 @@ with tab2:
 with tab3:
     st.subheader("🔮 Simulation")
     if st.session_state.ue_data:
+        # Affichage des résultats basés sur la moyenne actuelle pour référence
+        st.metric("Moyenne Actuelle de Référence", f"{moy_actuelle:.2f}/20")
+        st.markdown("---")
+
         sim_ue = st.selectbox("UE cible", list(st.session_state.ue_data.keys()))
         
         # Copie profonde pour simuler
@@ -252,11 +327,21 @@ with tab3:
             poids_sim = st.slider("Poids", 0.1, 1.0, 0.5)
         
         with c2:
+            # Ajoute la note de simulation à la liste des grades
             data_sim[sim_ue]['grades'].append({"note": note_sim, "poids": poids_sim})
-            _, sim_moy, _, _ = calcul_metriques(data_sim)
-            delta = sim_moy - moy_gen
-            st.metric("Nouvelle Moyenne", f"{sim_moy:.2f}", delta=f"{delta:+.2f}")
+            
+            # Recalcul des métriques avec la note simulée
+            _, sim_moy_actuelle, sim_moy_pessimiste, _, _ = calcul_metriques(data_sim)
+            
+            st.metric("Nouvelle Moyenne Actuelle", f"{sim_moy_actuelle:.2f}", 
+                      delta=f"{sim_moy_actuelle - moy_actuelle:+.2f}")
+            
+            st.metric("Nouvelle Moyenne Pessimiste", f"{sim_moy_pessimiste:.2f}", 
+                      delta=f"{sim_moy_pessimiste - moy_pessimiste:+.2f}")
 
 # === TAB 4: RAW ===
 with tab4:
+    st.subheader("Détails des UEs (Moyenne Actuelle)")
     if details: st.dataframe(pd.DataFrame(details), use_container_width=True)
+    st.subheader("Données JSON Brutes de Session")
+    st.json(st.session_state.ue_data)
