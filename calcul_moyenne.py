@@ -337,7 +337,7 @@ with tab3:
             data_sim[sim_ue]['grades'].append({"note": note_sim, "poids": poids_sim})
             
             # Recalcul des métriques avec la note simulée
-            _, sim_moy_actuelle, sim_moy_pessimiste, _, _ = calcul_metriques(data_sim)
+            _, sim_moy_actuelle, sim_moy_pessimiste, _, _, _ = calcul_metriques(data_sim)
             
             st.metric("Nouvelle Moyenne Actuelle", f"{sim_moy_actuelle:.2f}", 
                       delta=f"{sim_moy_actuelle - moy_actuelle:+.2f}")
