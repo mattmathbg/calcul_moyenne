@@ -67,7 +67,7 @@ ue_data_yiru = {
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.5), (None,0.5)]
+        "grades": [(15, 0.5), (12,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -197,7 +197,7 @@ ue_data_momo = {
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(13, 0.5), (None,0.5)]
+        "grades": [(13, 0.5), (15,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
