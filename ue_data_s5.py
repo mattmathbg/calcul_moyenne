@@ -19,7 +19,7 @@ ue_data_matteo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (12 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (12, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
