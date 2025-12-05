@@ -7,7 +7,7 @@ ue_data_matteo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -15,15 +15,15 @@ ue_data_matteo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (12, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(10.5, 0.5), (11,0.5)]
+        "grades": [(10.5, 0.5), (None,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -51,7 +51,7 @@ ue_data_yiru = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(13, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -59,15 +59,15 @@ ue_data_yiru = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (15, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.5), (12,0.5)]
+        "grades": [(15, 0.5), (None,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -94,7 +94,7 @@ ue_data_ryad = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(13.4, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -102,11 +102,11 @@ ue_data_ryad = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (17, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -137,7 +137,7 @@ ue_data_hugo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(8.57, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -145,11 +145,11 @@ ue_data_hugo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(11.5, 0.5), (None, 0.5)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (6, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -181,7 +181,7 @@ ue_data_momo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(12.64, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -189,15 +189,15 @@ ue_data_momo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(14.25, 0.5), (None, 0.5)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (11.75, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(13, 0.5), (15,0.5)]
+        "grades": [(13  , 0.5), (None,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -210,49 +210,6 @@ ue_data_momo = {
      "Anglais": {
         "coef": 3,
         "grades": [(11, 0.5), (None, 0.5)]
-    },
-     "architecture": {
-        "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
-    },
-}
-
-ue_data_robin = {
-    "LF": {
-        "coef": 3,
-        "grades": [(8, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
-    },
-    "CPOOA": {
-        "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
-    },
-    "Stats": {
-        "coef": 3,
-        "grades": [(13, 0.5), (None, 0.5)]
-    },
-    "CMBD": {
-        "coef": 3,
-        "grades": [(14, 0.5), (None, 0.5)]
-    },
-    "Application web": {
-        "coef": 3,
-        "grades": [(None, 0.5), (15.5, 0.25), (None, 0.25)]
-    },
-     "Systeme 2": {
-        "coef": 3,
-        "grades": [(14, 0.5), (13,0.5)]
-    },
-     "Réseaux 2": {
-        "coef": 3,
-        "grades": [(16, 0.5), (None, 0.5)]
-    },
-    "Analyse de données": {
-        "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
-    },
-     "Anglais": {
-        "coef": 3,
-        "grades": [(15, 0.5), (None, 0.5)]
     },
      "architecture": {
         "coef": 3,
