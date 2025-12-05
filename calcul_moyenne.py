@@ -314,51 +314,84 @@ with tab2:
                 st.toast("Sauvegardé !", icon="✅")
                 st.rerun()
 
-# === TAB 3: SIMULATION INTERACTIVE ===
+# === TAB 3: SIMULATION INTERACTIVE (CORRIGÉ 0-20) ===
 with tab3:
     st.subheader("🔮 Simulation Interactive")
-    st.markdown("Ajustez le curseur pour chaque UE afin de simuler votre note finale entre le **pire cas acquis** (Pessimiste) et votre **tendance actuelle** (Optimiste).")
+    st.markdown("Simulez votre moyenne finale : de 0/20 (Pire cas) à 20/20 (Meilleur cas) sur les notes restantes.")
 
     if not st.session_state.ue_data:
         st.warning("Veuillez d'abord charger des données ou créer des UEs.")
     else:
-        # --- 1. Préparation des données de simulation ---
+        # --- 1. Préparation des données ---
         sim_data = []
         
-        # On parcourt chaque UE pour calculer ses bornes (Min = Pessimiste, Max = Actuelle)
         for nom, details in st.session_state.ue_data.items():
             coef = details.get("coef", 1.0)
             grades = details.get("grades", [])
             sc = details.get("sc", None)
             
-            # Calcul Pessimiste (Notes reçues + 0 pour les manquants)
-            num_pess = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
-            den_pess = sum(g["poids"] for g in grades if g.get("poids") is not None)
-            val_pess = num_pess / den_pess if den_pess > 0 else 0.0
+            # Poids total de l'UE (ex: 1.0)
+            poids_total_ue = sum(g["poids"] for g in grades if g.get("poids") is not None)
             
-            # Calcul Actuel (Notes reçues uniquement)
-            num_act = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
-            den_act = sum(g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
-            val_act = num_act / den_act if den_act > 0 else 0.0
+            # Poids déjà noté (ex: 0.5 si une note reçue sur deux)
+            poids_deja_note = sum(g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
             
-            # Application Seconde Chance (SC) sur les bornes
-            if sc is not None:
-                val_pess = max(val_pess, (val_pess + sc) / 2)
-                val_act = max(val_act, (val_act + sc) / 2)
+            # Points acquis (Note * Poids)
+            points_acquis = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
             
-            # Sécurité : Si Actuelle < Pessimiste (cas rares), on inverse ou on égalise
-            if val_act < val_pess:
-                val_act = val_pess
+            # Poids restant à remplir
+            poids_manquant = poids_total_ue - poids_deja_note
+            
+            is_fixed = False
+            val_min = 0.0
+            val_max = 20.0
+            default_val = 0.0
+            
+            # Si l'UE est vide ou mal configurée (poids 0), on évite la division par zéro
+            if poids_total_ue <= 0:
+                pass 
+
+            elif poids_manquant <= 0.01:
+                # CAS 2 : UE Terminée (toutes notes reçues)
+                raw_grade = points_acquis / poids_total_ue
+                if sc is not None: raw_grade = max(raw_grade, (raw_grade + sc) / 2)
                 
+                val_min = raw_grade
+                val_max = raw_grade
+                default_val = raw_grade
+                is_fixed = True
+                
+            else:
+                # CAS 1 (Vide) & CAS 3 (Partiel)
+                # Borne Min : On a 0/20 sur le poids manquant
+                # Formule : (Points acquis + 0) / Total
+                raw_min = points_acquis / poids_total_ue
+                
+                # Borne Max : On a 20/20 sur le poids manquant
+                # Formule : (Points acquis + 20 * Poids manquant) / Total
+                raw_max = (points_acquis + (20.0 * poids_manquant)) / poids_total_ue
+                
+                # Application de la Seconde Chance (SC) sur les bornes
+                if sc is not None:
+                    val_min = max(raw_min, (raw_min + sc) / 2)
+                    val_max = max(raw_max, (raw_max + sc) / 2)
+                else:
+                    val_min = raw_min
+                    val_max = raw_max
+                
+                # Par défaut, on place le curseur sur le minimum acquis (Pessimiste)
+                default_val = val_min
+
             sim_data.append({
                 "UE": nom,
                 "Coef": coef,
-                "Min": val_pess,
-                "Max": val_act,
-                "Value": val_pess # Valeur par défaut
+                "Min": val_min,
+                "Max": val_max,
+                "Default": default_val,
+                "Fixed": is_fixed
             })
 
-        # --- 2. Interface de Simulation ---
+        # --- 2. Interface (Graphique + Sliders) ---
         col_graph, col_sliders = st.columns([2, 1])
         
         simulated_results = []
@@ -366,44 +399,52 @@ with tab3:
         total_coef_sim = 0
         
         with col_sliders:
-            st.caption("🎚️ Ajustez vos prévisions par UE :")
+            st.caption("🎚️ Ajustements (Min = 0 aux exams manquants, Max = 20) :")
             for item in sim_data:
-                # Si le min et le max sont identiques (toutes notes reçues), on désactive le slider
-                disabled = (abs(item["Max"] - item["Min"]) < 0.01)
+                ue_label = f"{item['UE']} (Coef {item['Coef']})"
                 
-                val_sim = st.slider(
-                    f"{item['UE']} (Coef {item['Coef']})",
-                    min_value=float(item["Min"]),
-                    max_value=float(item["Max"]),
-                    value=float(item["Min"]), # On commence par défaut au scénario pessimiste
-                    step=0.1,
-                    key=f"sim_{item['UE']}",
-                    disabled=disabled,
-                    help=f"Entre {item['Min']:.2f} et {item['Max']:.2f}"
-                )
+                if item["Fixed"]:
+                    st.success(f"🔒 **{item['UE']}** : {item['Default']:.2f}/20")
+                    val_finale = item['Default']
+                else:
+                    # Calcul du pas dynamique pour éviter les erreurs si min/max très proches
+                    step = 0.1
+                    if item["Max"] - item["Min"] < step: step = item["Max"] - item["Min"]
+                    if step == 0: step = 0.1
+                    
+                    val_finale = st.slider(
+                        ue_label,
+                        min_value=float(item["Min"]),
+                        max_value=float(item["Max"]),
+                        value=float(item["Default"]),
+                        step=0.1,
+                        format="%.2f",
+                        key=f"sim_{item['UE']}",
+                        help=f"Minimum assuré : {item['Min']:.2f} | Maximum possible : {item['Max']:.2f}"
+                    )
                 
-                simulated_results.append({"UE": item["UE"], "Note Simulée": val_sim, "Coef": item["Coef"]})
+                simulated_results.append({
+                    "UE": item["UE"], 
+                    "Note Simulée": val_finale, 
+                    "Coef": item["Coef"]
+                })
                 
-                # Calcul de la moyenne générale en direct
-                total_points_sim += val_sim * item["Coef"]
+                total_points_sim += val_finale * item["Coef"]
                 total_coef_sim += item["Coef"]
 
-        # --- 3. Calculs Finaux et Graphique ---
+        # --- 3. Graphique & Moyenne Temps Réel ---
         moyenne_generale_sim = total_points_sim / total_coef_sim if total_coef_sim > 0 else 0.0
         
         with col_graph:
-            # Affichage de la grosse métrique
             st.metric(
                 "Moyenne Générale Simulée", 
                 f"{moyenne_generale_sim:.2f}/20",
-                delta=f"{moyenne_generale_sim - 10:.2f} vs Validation"
+                delta="Simulation temps réel"
             )
             
-            # Graphique en Bâton
-            df_sim = pd.DataFrame(simulated_results)
-            if not df_sim.empty:
-                # Couleur dynamique : Vert si > 10, Rouge sinon
-                df_sim['Couleur'] = df_sim['Note Simulée'].apply(lambda x: '#2ecc71' if x >= 10 else '#e74c3c')
+            if simulated_results:
+                df_sim = pd.DataFrame(simulated_results)
+                df_sim['Color'] = df_sim['Note Simulée'].apply(lambda x: '#2ecc71' if x >= 10 else '#e74c3c')
                 
                 fig = px.bar(
                     df_sim, 
@@ -413,9 +454,7 @@ with tab3:
                     range_y=[0, 20],
                     title="Projection des Notes Finales"
                 )
-                fig.update_traces(marker_color=df_sim['Couleur'], texttemplate='%{y:.2f}', textposition='outside')
-                
-                # Ligne de validation à 10
+                fig.update_traces(marker_color=df_sim['Color'], texttemplate='%{y:.2f}', textposition='outside')
                 fig.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
                 
                 st.plotly_chart(fig, use_container_width=True)
