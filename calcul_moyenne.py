@@ -314,37 +314,111 @@ with tab2:
                 st.toast("Sauvegardé !", icon="✅")
                 st.rerun()
 
-# === TAB 3: SIMULATION ===
+# === TAB 3: SIMULATION INTERACTIVE ===
 with tab3:
-    st.subheader("🔮 Simulation")
-    if st.session_state.ue_data:
-        # Affichage des résultats basés sur la moyenne actuelle pour référence
-        st.metric("Moyenne Actuelle de Référence", f"{moy_actuelle:.2f}/20")
-        st.markdown("---")
+    st.subheader("🔮 Simulation Interactive")
+    st.markdown("Ajustez le curseur pour chaque UE afin de simuler votre note finale entre le **pire cas acquis** (Pessimiste) et votre **tendance actuelle** (Optimiste).")
 
-        sim_ue = st.selectbox("UE cible", list(st.session_state.ue_data.keys()))
+    if not st.session_state.ue_data:
+        st.warning("Veuillez d'abord charger des données ou créer des UEs.")
+    else:
+        # --- 1. Préparation des données de simulation ---
+        sim_data = []
         
-        # Copie profonde pour simuler
-        data_sim = json.loads(json.dumps(st.session_state.ue_data))
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            note_sim = st.slider("Note imaginée", 0.0, 20.0, 10.0)
-            poids_sim = st.slider("Poids", 0.1, 1.0, 0.5)
-        
-        with c2:
-            # Ajoute la note de simulation à la liste des grades
-            data_sim[sim_ue]['grades'].append({"note": note_sim, "poids": poids_sim})
+        # On parcourt chaque UE pour calculer ses bornes (Min = Pessimiste, Max = Actuelle)
+        for nom, details in st.session_state.ue_data.items():
+            coef = details.get("coef", 1.0)
+            grades = details.get("grades", [])
+            sc = details.get("sc", None)
             
-            # Recalcul des métriques avec la note simulée
-            _, sim_moy_actuelle, sim_moy_pessimiste, _, _, _ = calcul_metriques(data_sim)
+            # Calcul Pessimiste (Notes reçues + 0 pour les manquants)
+            num_pess = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+            den_pess = sum(g["poids"] for g in grades if g.get("poids") is not None)
+            val_pess = num_pess / den_pess if den_pess > 0 else 0.0
             
-            st.metric("Nouvelle Moyenne Actuelle", f"{sim_moy_actuelle:.2f}", 
-                      delta=f"{sim_moy_actuelle - moy_actuelle:+.2f}")
+            # Calcul Actuel (Notes reçues uniquement)
+            num_act = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+            den_act = sum(g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+            val_act = num_act / den_act if den_act > 0 else 0.0
             
-            st.metric("Nouvelle Moyenne Pessimiste", f"{sim_moy_pessimiste:.2f}", 
-                      delta=f"{sim_moy_pessimiste - moy_pessimiste:+.2f}")
+            # Application Seconde Chance (SC) sur les bornes
+            if sc is not None:
+                val_pess = max(val_pess, (val_pess + sc) / 2)
+                val_act = max(val_act, (val_act + sc) / 2)
+            
+            # Sécurité : Si Actuelle < Pessimiste (cas rares), on inverse ou on égalise
+            if val_act < val_pess:
+                val_act = val_pess
+                
+            sim_data.append({
+                "UE": nom,
+                "Coef": coef,
+                "Min": val_pess,
+                "Max": val_act,
+                "Value": val_pess # Valeur par défaut
+            })
 
+        # --- 2. Interface de Simulation ---
+        col_graph, col_sliders = st.columns([2, 1])
+        
+        simulated_results = []
+        total_points_sim = 0
+        total_coef_sim = 0
+        
+        with col_sliders:
+            st.caption("🎚️ Ajustez vos prévisions par UE :")
+            for item in sim_data:
+                # Si le min et le max sont identiques (toutes notes reçues), on désactive le slider
+                disabled = (abs(item["Max"] - item["Min"]) < 0.01)
+                
+                val_sim = st.slider(
+                    f"{item['UE']} (Coef {item['Coef']})",
+                    min_value=float(item["Min"]),
+                    max_value=float(item["Max"]),
+                    value=float(item["Min"]), # On commence par défaut au scénario pessimiste
+                    step=0.1,
+                    key=f"sim_{item['UE']}",
+                    disabled=disabled,
+                    help=f"Entre {item['Min']:.2f} et {item['Max']:.2f}"
+                )
+                
+                simulated_results.append({"UE": item["UE"], "Note Simulée": val_sim, "Coef": item["Coef"]})
+                
+                # Calcul de la moyenne générale en direct
+                total_points_sim += val_sim * item["Coef"]
+                total_coef_sim += item["Coef"]
+
+        # --- 3. Calculs Finaux et Graphique ---
+        moyenne_generale_sim = total_points_sim / total_coef_sim if total_coef_sim > 0 else 0.0
+        
+        with col_graph:
+            # Affichage de la grosse métrique
+            st.metric(
+                "Moyenne Générale Simulée", 
+                f"{moyenne_generale_sim:.2f}/20",
+                delta=f"{moyenne_generale_sim - 10:.2f} vs Validation"
+            )
+            
+            # Graphique en Bâton
+            df_sim = pd.DataFrame(simulated_results)
+            if not df_sim.empty:
+                # Couleur dynamique : Vert si > 10, Rouge sinon
+                df_sim['Couleur'] = df_sim['Note Simulée'].apply(lambda x: '#2ecc71' if x >= 10 else '#e74c3c')
+                
+                fig = px.bar(
+                    df_sim, 
+                    x="UE", 
+                    y="Note Simulée", 
+                    text="Note Simulée",
+                    range_y=[0, 20],
+                    title="Projection des Notes Finales"
+                )
+                fig.update_traces(marker_color=df_sim['Couleur'], texttemplate='%{y:.2f}', textposition='outside')
+                
+                # Ligne de validation à 10
+                fig.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
+                
+                st.plotly_chart(fig, use_container_width=True)
 # === TAB 4: RAW ===
 with tab4:
     st.subheader("Détails des UEs (Moyenne Actuelle)")
