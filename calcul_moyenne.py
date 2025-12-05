@@ -104,6 +104,7 @@ def reset_app():
 def calcul_metriques(data):
     """
     Calcule toutes les stats pour le dashboard, y compris la moyenne pessimiste.
+    Une UE est comptée "Validée" SEULEMENT si la moyenne PESSIMISTE >= 10.
     """
     resultats_detail = []
     total_points_actuel = 0.0
@@ -147,6 +148,11 @@ def calcul_metriques(data):
             moyenne_ue_actuelle_sc = max(moyenne_ue_actuelle, (moyenne_ue_actuelle + sc) / 2)
             moyenne_ue_pessimiste_sc = max(moyenne_ue_pessimiste, (moyenne_ue_pessimiste + sc) / 2)
 
+        # --- Détermination du statut de validation (Strict) ---
+        est_validee_secure = moyenne_ue_pessimiste_sc >= 10
+        if est_validee_secure:
+            ue_validees += 1
+
         # --- Mise à Jour des Totaux Globaux ---
 
         # 1. Total Actuel (pour l'affichage de la moyenne Actuelle et le tableau de détails)
@@ -154,15 +160,21 @@ def calcul_metriques(data):
             total_points_actuel += moyenne_ue_actuelle_sc * coef
             total_coef_actuel += coef
 
-            statut = "✅" if moyenne_ue_actuelle_sc >= 10 else "❌"
-            if moyenne_ue_actuelle_sc >= 10: ue_validees += 1
+            # Icône visuelle pour le tableau
+            if est_validee_secure:
+                icon_statut = "🔒 Validé"
+            elif moyenne_ue_actuelle_sc >= 10:
+                icon_statut = "⏳ En cours"
+            else:
+                icon_statut = "⚠️ Danger"
+
             ue_total += 1 # Compte les UEs avec au moins une note
 
             resultats_detail.append({
                 "UE": nom,
                 "Coef": coef,
                 "Moyenne": round(moyenne_ue_actuelle_sc, 2), # Affiche la moyenne actuelle dans le tableau
-                "Statut": statut
+                "Statut": icon_statut
             })
         elif den_pessimiste > 0:
             # Si aucune note reçue, mais des notes prévues, on compte l'UE
@@ -178,6 +190,7 @@ def calcul_metriques(data):
     moyenne_gen_pessimiste = total_points_pessimiste / total_coef_pessimiste if total_coef_pessimiste > 0 else 0.0
 
     return resultats_detail, moyenne_gen_actuelle, moyenne_gen_pessimiste, ue_validees, ue_total, total_coef_pessimiste
+
 # ---------- SIDEBAR (MENU) ----------
 with st.sidebar:
     st.header("⚙️ Configuration")
@@ -232,7 +245,7 @@ with tab1:
         col2.metric("Moyenne Pessimiste", f"{moy_pessimiste:.2f}/20", 
                     delta=f"{moy_pessimiste-10:.2f} vs val. (Notes manquantes à 0)", 
                     delta_color="normal" if moy_pessimiste >= 10 else "inverse")
-        col3.metric("UE Validées", f"{valides}/{total_ues}")
+        col3.metric("UE Validées", f"{valides}/{total_ues}", help="Une UE est validée si sa moyenne PESSIMISTE est ≥ 10")
         col4.metric("Coefficients Totaux", total_coef_pessimiste) # Utilise le coefficient total de toutes les UEs
 
         c1, c2 = st.columns([1, 2])
@@ -278,15 +291,13 @@ with tab2:
             curr_data = st.session_state.ue_data[ue_select]
             
             # Modifier le coefficient et la SC de l'UE
-            # CORRECTION APPLIQUÉE : Assurer que la valeur (value) est toujours un float.
             curr_data["coef"] = st.number_input(
                 "Coefficient de l'UE", 
                 min_value=1.0, 
                 max_value=20.0, 
-                value=float(curr_data.get("coef", 1.0)), # <- Convertir la valeur par défaut en float
+                value=float(curr_data.get("coef", 1.0)), 
                 key=f"coef_{ue_select}"
             )
-            # st.number_input pour la SC est correcte car vous utilisez `None` si vide.
             curr_data["sc"] = st.number_input("Note Seconde Chance", 0.0, 20.0, curr_data.get("sc"), key=f"sc_{ue_select}", help="Laissez vide pour désactiver.")
             
             # DataFrame pour l'éditeur
@@ -430,6 +441,7 @@ with tab3:
                 fig.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
                 
                 st.plotly_chart(fig, use_container_width=True)
+
 # === TAB 4: RAW ===
 with tab4:
     st.subheader("Détails des UEs (Moyenne Actuelle)")
