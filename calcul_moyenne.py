@@ -325,7 +325,7 @@ with tab2:
                 st.toast("Sauvegardé !", icon="✅")
                 st.rerun()
 
-# === TAB 3: SIMULATION BASÉE SUR LA PERFORMANCE (Recommandé) ===
+# === TAB 3: SIMULATION BASÉE SUR LA PERFORMANCE ===
 with tab3:
     st.subheader("🔮 Simulation & Objectifs")
     st.markdown("""
@@ -337,8 +337,6 @@ with tab3:
         st.warning("Veuillez d'abord charger des données ou créer des UEs.")
     else:
         # --- 1. Préparation des données ---
-        sim_data = []
-        
         col_graph, col_sliders = st.columns([2, 1])
         
         with col_sliders:
@@ -361,11 +359,13 @@ with tab3:
                 # Points déjà acquis
                 points_acquis = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
                 
-                # --- CAS 1 : UE Terminée ---
+                # --- CAS 1 : UE Terminée (Tout est noté) ---
                 if poids_manquant <= 0.01:
+                    # Calcul de la moyenne finale
                     moyenne_ue = points_acquis / poids_total if poids_total > 0 else 0
                     if sc: moyenne_ue = max(moyenne_ue, (moyenne_ue + sc)/2)
                     
+                    # Affichage fixe (pas de slider)
                     st.success(f"🔒 **{nom}** : {moyenne_ue:.2f}/20 (Terminé)")
                     simulated_results.append({"UE": nom, "Note Finale": moyenne_ue, "Coef": coef, "Type": "Fixé"})
                     total_points_sim += moyenne_ue * coef
@@ -374,7 +374,6 @@ with tab3:
                 # --- CAS 2 : UE en cours (Calcul d'objectif) ---
                 else:
                     # Calcul de la note nécessaire pour avoir 10/20 de moyenne UE
-                    # Formule : (10 * Total - Acquis) / Manquant
                     target_10 = (10.0 * poids_total - points_acquis) / poids_manquant
                     
                     # Affichage de l'aide à la décision
@@ -441,7 +440,6 @@ with tab3:
                 fig.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
                 
                 st.plotly_chart(fig, use_container_width=True)
-
 # === TAB 4: RAW ===
 with tab4:
     st.subheader("Détails des UEs (Moyenne Actuelle)")
