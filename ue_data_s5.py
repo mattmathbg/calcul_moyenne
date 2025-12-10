@@ -15,7 +15,7 @@ ue_data_matteo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(11, 0.25),(None, 0,25), (None, 0.5)]
+        "grades": [(11.25, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
@@ -51,7 +51,7 @@ ue_data_yiru = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(13, 0.5), (None, 0.5)]
+        "grades": [(14.5, 0.5), (None, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -145,7 +145,7 @@ ue_data_hugo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(11.5, 0.25), (None, 0.25), (None, 0.5)]
+        "grades": [(11.5, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
@@ -189,7 +189,7 @@ ue_data_momo = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(12.5, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
