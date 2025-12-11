@@ -149,7 +149,7 @@ ue_data_hugo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (7, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (7, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
