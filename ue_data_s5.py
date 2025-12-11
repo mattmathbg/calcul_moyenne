@@ -59,15 +59,15 @@ ue_data_yiru = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(14.5, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (15, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.5), (None,0.5)]
+        "grades": [(15, 0.5), (12,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -83,7 +83,7 @@ ue_data_yiru = {
     },
      "architecture": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(19, 0.5), (None, 0.5)]
     },
 }
 
