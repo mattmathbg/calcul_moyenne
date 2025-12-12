@@ -69,8 +69,8 @@ if "logged_in" not in st.session_state:
     st.session_state.ue_data = {}
 
 def login_page():
-    st.markdown("## 🔐 Connexion Étudiant")
-    st.info("Utilisez les identifiants Supabase configurés.")
+    st.markdown("## 🔐 Connexion / Inscription")
+    st.info("Si c'est votre première connexion, un compte sera créé automatiquement avec ces identifiants.")
     
     with st.form("login"):
         user = st.text_input("Identifiant")
@@ -78,18 +78,30 @@ def login_page():
         submit = st.form_submit_button("Entrer")
         
     if submit:
+        if not user or not pwd:
+            st.warning("Veuillez remplir tous les champs.")
+            return
+
         with st.spinner("Connexion en cours..."):
+            # 1. On essaie de récupérer l'utilisateur
             user_data = get_user_from_db(user, pwd)
             
-        if user_data is not None:
-            st.session_state.logged_in = True
-            st.session_state.username = user
-            st.session_state.password = pwd
-            st.session_state.ue_data = user_data
-            st.success("Connexion réussie !")
-            st.rerun()
-        else:
-            st.error("Identifiant ou mot de passe incorrect.")
+            # 2. Si l'utilisateur n'existe pas, on le CRÉE (Auto-inscription)
+            if user_data is None:
+                try:
+                    save_user_data(user, pwd, {})
+                    user_data = {} # On initialise avec des données vides
+                    st.success(f"Nouveau compte créé pour '{user}' !")
+                except Exception as e:
+                    st.error(f"Erreur lors de la création du compte : {e}")
+                    return
+
+        # 3. On connecte l'utilisateur (qu'il soit nouveau ou ancien)
+        st.session_state.logged_in = True
+        st.session_state.username = user
+        st.session_state.password = pwd
+        st.session_state.ue_data = user_data
+        st.rerun()
 
 if not st.session_state.logged_in:
     login_page()
