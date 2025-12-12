@@ -516,78 +516,100 @@ with tab4:
                 }
             )
             
-# === TAB 5: classement ===
-# === TAB 5: CLASSEMENT INTER-ÉLÈVES ===
+# === TAB 5: COMPARATEUR DE PROMO ===
 with tab5:
-    st.subheader("🏆 Classement Général (Inter-Élèves)")
-    st.markdown("Ce classement compare la **moyenne pessimiste** de tous les profils détectés dans les fichiers locaux.")
+    st.subheader("🏆 Comparateur de Promo")
+    st.markdown("Classement des élèves sur la base des matières communes (Moyenne Pessimiste).")
 
-    # 1. Récupération de toutes les données locales via la fonction existante
-    datasets_locaux = scanner_fichiers_locaux()
-
-    if not datasets_locaux:
-        st.warning("Aucun fichier de données 'ue_data_*.py' trouvé pour le classement.")
+    if not st.session_state.ue_data:
+        st.warning("Veuillez d'abord charger vos données pour pouvoir comparer.")
     else:
-        classement_promo = []
+        # 1. Identifier la structure du dataset actuel (les UEs)
+        ues_actuelles = set(st.session_state.ue_data.keys())
+        datasets_locaux = scanner_fichiers_locaux()
+        
+        comparaison_gen = []
+        comparaison_par_ue = {ue: [] for ue in ues_actuelles}
 
-        # 2. Boucle sur chaque fichier et chaque dataset trouvé
+        # 2. Scanner et filtrer les autres élèves
         for nom_fichier, contenu_fichier in datasets_locaux.items():
             for nom_dataset, data_raw in contenu_fichier.items():
                 
-                # Normalisation des données pour éviter les erreurs de format
+                # On normalise
                 data_propre = normaliser_donnees(data_raw)
+                ues_candidat = set(data_propre.keys())
                 
-                # Calcul des métriques en réutilisant la fonction existante du script
-                # calcul_metriques renvoie : details, moy_actuelle, moy_pessimiste, valides, total_ues, total_coef
-                _, _, moy_pessimiste, nb_valides, total_ues, _ = calcul_metriques(data_propre)
-                
-                # Création d'un nom lisible pour l'élève (ex: "ue_data_thomas" -> "Thomas")
-                nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
-                
-                classement_promo.append({
-                    "Élève": nom_eleve,
-                    "Moyenne Pessimiste": moy_pessimiste,
-                    "UE Validées": f"{nb_valides}/{total_ues}",
-                    "Fichier Source": nom_fichier
-                })
+                # CRITÈRE DE FILTRE : On ne compare que si les UEs sont identiques
+                # (Cela répond à "uniquement le ue data sélectionné")
+                if ues_actuelles == ues_candidat:
+                    nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
+                    
+                    # --- A. Calcul Moyenne Générale ---
+                    _, _, moy_pessimiste, _, _, _ = calcul_metriques(data_propre)
+                    comparaison_gen.append({
+                        "Élève": nom_eleve,
+                        "Moyenne Générale": moy_pessimiste,
+                        "Source": nom_fichier
+                    })
+                    
+                    # --- B. Extraction des notes par UE ---
+                    for ue_nom, ue_details in data_propre.items():
+                        # Recalcul de la moyenne pessimiste locale pour l'UE
+                        grades = ue_details.get("grades", [])
+                        sc = ue_details.get("sc", None)
+                        
+                        num = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+                        den = sum(g["poids"] for g in grades if g.get("poids") is not None)
+                        
+                        moy_ue = num / den if den > 0 else 0.0
+                        
+                        # Seconde chance
+                        if sc is not None:
+                            moy_ue = max(moy_ue, (moy_ue + sc) / 2)
+                            
+                        comparaison_par_ue[ue_nom].append({
+                            "Élève": nom_eleve,
+                            "Moyenne UE": moy_ue
+                        })
 
-        # 3. Affichage du tableau trié
-        if classement_promo:
-            df_promo = pd.DataFrame(classement_promo)
+        if not comparaison_gen:
+            st.info("Aucun autre élève trouvé avec exactement les mêmes matières pour la comparaison.")
+        else:
+            # --- SECTION 1 : CLASSEMENT GÉNÉRAL ---
+            st.markdown("### 🌍 Classement Général")
+            df_gen = pd.DataFrame(comparaison_gen).sort_values(by="Moyenne Générale", ascending=False)
+            df_gen.reset_index(drop=True, inplace=True)
+            df_gen.index += 1
             
-            # Tri décroissant par moyenne (le meilleur en haut)
-            df_promo = df_promo.sort_values(by="Moyenne Pessimiste", ascending=False)
-            
-            # Réinitialisation de l'index pour avoir un classement 1, 2, 3...
-            df_promo.reset_index(drop=True, inplace=True)
-            df_promo.index += 1
-            
-            # Affichage du Top 3 (Podium) si assez de monde
-            if len(df_promo) >= 3:
-                c1, c2, c3 = st.columns(3)
-                top1 = df_promo.iloc[0]
-                top2 = df_promo.iloc[1]
-                top3 = df_promo.iloc[2]
-                
-                c1.metric("🥇 1er", f"{top1['Élève']}", f"{top1['Moyenne Pessimiste']:.2f}")
-                c2.metric("🥈 2ème", f"{top2['Élève']}", f"{top2['Moyenne Pessimiste']:.2f}")
-                c3.metric("🥉 3ème", f"{top3['Élève']}", f"{top3['Moyenne Pessimiste']:.2f}")
-                st.divider()
-
-            # Affichage du tableau complet
             st.dataframe(
-                df_promo,
+                df_gen,
                 use_container_width=True,
                 column_config={
-                    "Moyenne Pessimiste": st.column_config.ProgressColumn(
-                        "Moyenne Pessimiste",
-                        format="%.2f / 20",
-                        min_value=0,
-                        max_value=20,
-                    ),
-                    "UE Validées": st.column_config.TextColumn("UE Validées"),
-                    "Fichier Source": st.column_config.TextColumn("Source", help="Fichier Python d'origine"),
+                    "Moyenne Générale": st.column_config.ProgressColumn(
+                        "Moyenne Générale", format="%.2f", min_value=0, max_value=20
+                    )
                 }
             )
-        else:
-            st.info("Aucune donnée valide n'a pu être extraite.")
+
+            st.divider()
+
+            # --- SECTION 2 : CLASSEMENT PAR COURS ---
+            st.markdown("### 📚 Classement par Cours")
+            ue_a_comparer = st.selectbox("Choisir une UE à comparer :", sorted(list(ues_actuelles)))
+            
+            if ue_a_comparer:
+                data_ue = comparaison_par_ue.get(ue_a_comparer, [])
+                if data_ue:
+                    df_ue = pd.DataFrame(data_ue).sort_values(by="Moyenne UE", ascending=False)
+                    df_ue.reset_index(drop=True, inplace=True)
+                    df_ue.index += 1
+                    
+                    st.dataframe(
+                        df_ue,
+                        use_container_width=True,
+                        column_config={
+                            "Moyenne UE": st.column_config.ProgressColumn(
+                                f"Moyenne {ue_a_comparer}", format="%.2f", min_value=0, max_value=20,
+                            )
+                        }
+                    )
