@@ -229,7 +229,7 @@ with st.sidebar:
 st.title("Calculateur de Moyenne Étudiante 🎓")
 
 # Création des onglets
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏅 classement"])
 
 # === TAB 1: DASHBOARD ===
 with tab1:
@@ -446,3 +446,79 @@ with tab4:
     if details: st.dataframe(pd.DataFrame(details), use_container_width=True)
     st.subheader("Données JSON Brutes de Session")
     st.json(st.session_state.ue_data)
+# === TAB 5: CLASSEMENT ===
+# === TAB 5: CLASSEMENT ===
+with tab5:
+    st.subheader("🏅 Classement des UEs (Moyenne Pessimiste)")
+    st.markdown("Ce classement est basé sur la **moyenne pessimiste** (les notes non reçues valent 0).")
+
+    if not st.session_state.ue_data:
+        st.warning("Aucune donnée disponible pour le classement.")
+    else:
+        classement_data = []
+        
+        for nom, details in st.session_state.ue_data.items():
+            grades = details.get("grades", [])
+            sc = details.get("sc", None)
+            
+            # --- Calcul Moyenne Pessimiste ---
+            num_pessimiste = 0.0
+            den_pessimiste = sum(g["poids"] for g in grades if g.get("poids") is not None)
+            notes_recues_count = 0
+            
+            for g in grades:
+                note = g.get("note")
+                poids = g.get("poids")
+                
+                if poids is not None and poids > 0:
+                    if note is not None:
+                        # Note reçue
+                        num_pessimiste += note * poids
+                        notes_recues_count += 1
+                    # Si note est None, on ajoute 0 au numérateur (pessimiste)
+            
+            moyenne_ue_pessimiste = num_pessimiste / den_pessimiste if den_pessimiste > 0 else 0.0
+            
+            # Application Seconde Chance (SC)
+            moyenne_finale = moyenne_ue_pessimiste
+            if sc is not None:
+                moyenne_finale = max(moyenne_ue_pessimiste, (moyenne_ue_pessimiste + sc) / 2)
+            
+            classement_data.append({
+                "UE": nom,
+                "Moyenne Pessimiste": moyenne_finale,
+                "Notes Reçues": f"{notes_recues_count} / {len(grades)}",
+                "Coef": details.get("coef", 1.0)
+            })
+            
+        # Création du DataFrame et Tri
+        if classement_data:
+            df_classement = pd.DataFrame(classement_data)
+            # Tri décroissant par moyenne
+            df_classement = df_classement.sort_values(by="Moyenne Pessimiste", ascending=False)
+            
+            # Reset de l'index pour avoir un classement 1, 2, 3...
+            df_classement.reset_index(drop=True, inplace=True)
+            df_classement.index += 1
+            
+            # Affichage avec configuration des colonnes (Barre de progression pour la moyenne)
+            st.dataframe(
+                df_classement,
+                use_container_width=True,
+                column_config={
+                    "Moyenne Pessimiste": st.column_config.ProgressColumn(
+                        "Moyenne Pessimiste",
+                        format="%.2f",
+                        min_value=0,
+                        max_value=20,
+                    ),
+                    "Notes Reçues": st.column_config.TextColumn(
+                        "Notes Reçues",
+                        help="Nombre de notes saisies sur le nombre total attendu"
+                    ),
+                    "Coef": st.column_config.NumberColumn(
+                        "Coef",
+                        format="%.1f"
+                    )
+                }
+            )
