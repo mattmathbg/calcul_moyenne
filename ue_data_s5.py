@@ -193,7 +193,7 @@ ue_data_momo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (None, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
