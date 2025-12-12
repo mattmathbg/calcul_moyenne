@@ -229,7 +229,7 @@ with st.sidebar:
 st.title("Calculateur de Moyenne Étudiante 🎓")
 
 # Création des onglets
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏅 classement"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏆 classement"])
 
 # === TAB 1: DASHBOARD ===
 with tab1:
@@ -516,71 +516,77 @@ with tab4:
                 }
             )
             
-# === TAB 5: COMPARATEUR DE PROMO ===
+# === TAB 5: CLASSEMENT (FICHIER SÉLECTIONNÉ) ===
 with tab5:
-    st.subheader("🏆 Comparateur de Promo")
-    st.markdown("Classement des élèves sur la base des matières communes (Moyenne Pessimiste).")
+    st.subheader(f"🏆 Classement du fichier : {fichier_choisi if 'fichier_choisi' in locals() else 'Inconnu'}")
 
-    if not st.session_state.ue_data:
-        st.warning("Veuillez d'abord charger vos données pour pouvoir comparer.")
+    # Vérification que les variables du script principal sont accessibles
+    if 'datasets_locaux' not in locals() or 'fichier_choisi' not in locals() or not fichier_choisi:
+        st.warning("Veuillez sélectionner un fichier valide dans la barre latérale (gauche).")
     else:
-        # 1. Identifier la structure du dataset actuel (les UEs)
-        ues_actuelles = set(st.session_state.ue_data.keys())
-        datasets_locaux = scanner_fichiers_locaux()
+        # Récupération des données du fichier choisi
+        groupe_data = datasets_locaux[fichier_choisi]
         
-        comparaison_gen = []
-        comparaison_par_ue = {ue: [] for ue in ues_actuelles}
+        classement_general = []
+        classement_par_matiere = {} # Dictionnaire : { "Maths": [ {Eleve: ..., Note: ...} ] }
+        toutes_les_matieres = set()
 
-        # 2. Scanner et filtrer les autres élèves
-        for nom_fichier, contenu_fichier in datasets_locaux.items():
-            for nom_dataset, data_raw in contenu_fichier.items():
+        # 1. Analyse de chaque élève dans le fichier
+        for nom_dataset, data_raw in groupe_data.items():
+            nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
+            
+            # Normalisation
+            data_eleve = normaliser_donnees(data_raw)
+            
+            # --- A. Calcul Moyenne Générale Pessimiste ---
+            # On utilise la fonction existante calcul_metriques
+            _, _, moy_gen_pessimiste, _, _, _ = calcul_metriques(data_eleve)
+            
+            classement_general.append({
+                "Élève": nom_eleve,
+                "Moyenne Générale": moy_gen_pessimiste
+            })
+            
+            # --- B. Extraction des notes par Matière ---
+            for nom_ue, details_ue in data_eleve.items():
+                toutes_les_matieres.add(nom_ue)
                 
-                # On normalise
-                data_propre = normaliser_donnees(data_raw)
-                ues_candidat = set(data_propre.keys())
+                # Calcul de la moyenne de l'UE (Pessimiste)
+                grades = details_ue.get("grades", [])
+                sc = details_ue.get("sc", None)
                 
-                # CRITÈRE DE FILTRE : On ne compare que si les UEs sont identiques
-                # (Cela répond à "uniquement le ue data sélectionné")
-                if ues_actuelles == ues_candidat:
-                    nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
-                    
-                    # --- A. Calcul Moyenne Générale ---
-                    _, _, moy_pessimiste, _, _, _ = calcul_metriques(data_propre)
-                    comparaison_gen.append({
-                        "Élève": nom_eleve,
-                        "Moyenne Générale": moy_pessimiste,
-                        "Source": nom_fichier
-                    })
-                    
-                    # --- B. Extraction des notes par UE ---
-                    for ue_nom, ue_details in data_propre.items():
-                        # Recalcul de la moyenne pessimiste locale pour l'UE
-                        grades = ue_details.get("grades", [])
-                        sc = ue_details.get("sc", None)
-                        
-                        num = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
-                        den = sum(g["poids"] for g in grades if g.get("poids") is not None)
-                        
-                        moy_ue = num / den if den > 0 else 0.0
-                        
-                        # Seconde chance
-                        if sc is not None:
-                            moy_ue = max(moy_ue, (moy_ue + sc) / 2)
-                            
-                        comparaison_par_ue[ue_nom].append({
-                            "Élève": nom_eleve,
-                            "Moyenne UE": moy_ue
-                        })
+                num = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+                den = sum(g["poids"] for g in grades if g.get("poids") is not None)
+                
+                moy_ue = num / den if den > 0 else 0.0
+                
+                # Seconde chance
+                if sc is not None:
+                    moy_ue = max(moy_ue, (moy_ue + sc) / 2)
+                
+                # Ajout dans la liste de la matière
+                if nom_ue not in classement_par_matiere:
+                    classement_par_matiere[nom_ue] = []
+                
+                classement_par_matiere[nom_ue].append({
+                    "Élève": nom_eleve,
+                    "Moyenne": moy_ue
+                })
 
-        if not comparaison_gen:
-            st.info("Aucun autre élève trouvé avec exactement les mêmes matières pour la comparaison.")
-        else:
-            # --- SECTION 1 : CLASSEMENT GÉNÉRAL ---
-            st.markdown("### 🌍 Classement Général")
-            df_gen = pd.DataFrame(comparaison_gen).sort_values(by="Moyenne Générale", ascending=False)
+        # 2. Affichage du Classement Général
+        st.markdown("### 🌍 Classement Général (Moyenne Pessimiste)")
+        if classement_general:
+            df_gen = pd.DataFrame(classement_general).sort_values(by="Moyenne Générale", ascending=False)
             df_gen.reset_index(drop=True, inplace=True)
             df_gen.index += 1
             
+            # Podium visuel
+            if len(df_gen) >= 3:
+                c1, c2, c3 = st.columns(3)
+                c1.metric("🥇 1er", df_gen.iloc[0]['Élève'], f"{df_gen.iloc[0]['Moyenne Générale']:.2f}")
+                c2.metric("🥈 2ème", df_gen.iloc[1]['Élève'], f"{df_gen.iloc[1]['Moyenne Générale']:.2f}")
+                c3.metric("🥉 3ème", df_gen.iloc[2]['Élève'], f"{df_gen.iloc[2]['Moyenne Générale']:.2f}")
+
             st.dataframe(
                 df_gen,
                 use_container_width=True,
@@ -590,26 +596,37 @@ with tab5:
                     )
                 }
             )
+        
+        st.divider()
 
-            st.divider()
-
-            # --- SECTION 2 : CLASSEMENT PAR COURS ---
-            st.markdown("### 📚 Classement par Cours")
-            ue_a_comparer = st.selectbox("Choisir une UE à comparer :", sorted(list(ues_actuelles)))
+        # 3. Affichage du Classement par Matière
+        st.markdown("### 📚 Classement par Matière")
+        
+        # Selectbox pour choisir la matière
+        if toutes_les_matieres:
+            matiere_selectionnee = st.selectbox("Voir le classement pour :", sorted(list(toutes_les_matieres)))
             
-            if ue_a_comparer:
-                data_ue = comparaison_par_ue.get(ue_a_comparer, [])
-                if data_ue:
-                    df_ue = pd.DataFrame(data_ue).sort_values(by="Moyenne UE", ascending=False)
-                    df_ue.reset_index(drop=True, inplace=True)
-                    df_ue.index += 1
+            if matiere_selectionnee:
+                data_matiere = classement_par_matiere.get(matiere_selectionnee, [])
+                
+                if data_matiere:
+                    df_mat = pd.DataFrame(data_matiere).sort_values(by="Moyenne", ascending=False)
+                    df_mat.reset_index(drop=True, inplace=True)
+                    df_mat.index += 1
                     
                     st.dataframe(
-                        df_ue,
+                        df_mat,
                         use_container_width=True,
                         column_config={
-                            "Moyenne UE": st.column_config.ProgressColumn(
-                                f"Moyenne {ue_a_comparer}", format="%.2f", min_value=0, max_value=20,
+                            "Moyenne": st.column_config.ProgressColumn(
+                                f"Moyenne {matiere_selectionnee}", 
+                                format="%.2f", 
+                                min_value=0, 
+                                max_value=20
                             )
                         }
                     )
+                else:
+                    st.info(f"Personne n'a de notes pour {matiere_selectionnee}.")
+        else:
+            st.info("Aucune matière trouvée dans ce fichier.")
