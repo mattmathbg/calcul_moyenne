@@ -102,15 +102,15 @@ ue_data_ryad = {
     },
     "CMBD": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(14.5, 0.5), (None, 0.5)]
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.25), (None, 0.25)]
+        "grades": [(17, 0.5), (None, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.5), (None,0.5)]
+        "grades": [(15, 0.5), (13,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
@@ -126,7 +126,7 @@ ue_data_ryad = {
     },
      "architecture": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(13.5, 0.5), (None, 0.5)]
     },
 }
 
