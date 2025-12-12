@@ -440,15 +440,8 @@ with tab3:
                 fig.add_hline(y=10, line_dash="dash", line_color="black", annotation_text="Validation")
                 
                 st.plotly_chart(fig, use_container_width=True)
-# === TAB 4: RAW ===
+# === TAB 4: CLASSEMENT ===
 with tab4:
-    st.subheader("Détails des UEs (Moyenne Actuelle)")
-    if details: st.dataframe(pd.DataFrame(details), use_container_width=True)
-    st.subheader("Données JSON Brutes de Session")
-    st.json(st.session_state.ue_data)
-# === TAB 5: CLASSEMENT ===
-# === TAB 5: CLASSEMENT ===
-with tab5:
     st.subheader("🏅 Classement des UEs (Moyenne Pessimiste)")
     st.markdown("Ce classement est basé sur la **moyenne pessimiste** (les notes non reçues valent 0).")
 
@@ -522,3 +515,79 @@ with tab5:
                     )
                 }
             )
+            
+# === TAB 5: classement ===
+# === TAB 5: CLASSEMENT INTER-ÉLÈVES ===
+with tab5:
+    st.subheader("🏆 Classement Général (Inter-Élèves)")
+    st.markdown("Ce classement compare la **moyenne pessimiste** de tous les profils détectés dans les fichiers locaux.")
+
+    # 1. Récupération de toutes les données locales via la fonction existante
+    datasets_locaux = scanner_fichiers_locaux()
+
+    if not datasets_locaux:
+        st.warning("Aucun fichier de données 'ue_data_*.py' trouvé pour le classement.")
+    else:
+        classement_promo = []
+
+        # 2. Boucle sur chaque fichier et chaque dataset trouvé
+        for nom_fichier, contenu_fichier in datasets_locaux.items():
+            for nom_dataset, data_raw in contenu_fichier.items():
+                
+                # Normalisation des données pour éviter les erreurs de format
+                data_propre = normaliser_donnees(data_raw)
+                
+                # Calcul des métriques en réutilisant la fonction existante du script
+                # calcul_metriques renvoie : details, moy_actuelle, moy_pessimiste, valides, total_ues, total_coef
+                _, _, moy_pessimiste, nb_valides, total_ues, _ = calcul_metriques(data_propre)
+                
+                # Création d'un nom lisible pour l'élève (ex: "ue_data_thomas" -> "Thomas")
+                nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
+                
+                classement_promo.append({
+                    "Élève": nom_eleve,
+                    "Moyenne Pessimiste": moy_pessimiste,
+                    "UE Validées": f"{nb_valides}/{total_ues}",
+                    "Fichier Source": nom_fichier
+                })
+
+        # 3. Affichage du tableau trié
+        if classement_promo:
+            df_promo = pd.DataFrame(classement_promo)
+            
+            # Tri décroissant par moyenne (le meilleur en haut)
+            df_promo = df_promo.sort_values(by="Moyenne Pessimiste", ascending=False)
+            
+            # Réinitialisation de l'index pour avoir un classement 1, 2, 3...
+            df_promo.reset_index(drop=True, inplace=True)
+            df_promo.index += 1
+            
+            # Affichage du Top 3 (Podium) si assez de monde
+            if len(df_promo) >= 3:
+                c1, c2, c3 = st.columns(3)
+                top1 = df_promo.iloc[0]
+                top2 = df_promo.iloc[1]
+                top3 = df_promo.iloc[2]
+                
+                c1.metric("🥇 1er", f"{top1['Élève']}", f"{top1['Moyenne Pessimiste']:.2f}")
+                c2.metric("🥈 2ème", f"{top2['Élève']}", f"{top2['Moyenne Pessimiste']:.2f}")
+                c3.metric("🥉 3ème", f"{top3['Élève']}", f"{top3['Moyenne Pessimiste']:.2f}")
+                st.divider()
+
+            # Affichage du tableau complet
+            st.dataframe(
+                df_promo,
+                use_container_width=True,
+                column_config={
+                    "Moyenne Pessimiste": st.column_config.ProgressColumn(
+                        "Moyenne Pessimiste",
+                        format="%.2f / 20",
+                        min_value=0,
+                        max_value=20,
+                    ),
+                    "UE Validées": st.column_config.TextColumn("UE Validées"),
+                    "Fichier Source": st.column_config.TextColumn("Source", help="Fichier Python d'origine"),
+                }
+            )
+        else:
+            st.info("Aucune donnée valide n'a pu être extraite.")
