@@ -520,51 +520,51 @@ with tab4:
 with tab5:
     st.subheader(f"🏆 Classement du fichier : {fichier_choisi if 'fichier_choisi' in locals() else 'Inconnu'}")
 
-    # Vérification que les variables du script principal sont accessibles
     if 'datasets_locaux' not in locals() or 'fichier_choisi' not in locals() or not fichier_choisi:
         st.warning("Veuillez sélectionner un fichier valide dans la barre latérale (gauche).")
     else:
-        # Récupération des données du fichier choisi
         groupe_data = datasets_locaux[fichier_choisi]
         
         classement_general = []
-        classement_par_matiere = {} # Dictionnaire : { "Maths": [ {Eleve: ..., Note: ...} ] }
+        classement_par_matiere = {} 
         toutes_les_matieres = set()
 
-        # 1. Analyse de chaque élève dans le fichier
+        # 1. Analyse de chaque élève
         for nom_dataset, data_raw in groupe_data.items():
             nom_eleve = nom_dataset.replace("ue_data_", "").capitalize()
-            
-            # Normalisation
             data_eleve = normaliser_donnees(data_raw)
             
-            # --- A. Calcul Moyenne Générale Pessimiste ---
-            # On utilise la fonction existante calcul_metriques
+            # --- A. Moyenne Générale & Comptage des notes ---
             _, _, moy_gen_pessimiste, _, _, _ = calcul_metriques(data_eleve)
             
+            # Calcul du nombre de notes reçues vs total attendu
+            nb_recu = 0
+            nb_total = 0
+            for ue_vals in data_eleve.values():
+                grades = ue_vals.get("grades", [])
+                nb_total += len(grades)
+                # On compte une note si elle n'est pas None
+                nb_recu += sum(1 for g in grades if g.get("note") is not None)
+
             classement_general.append({
                 "Élève": nom_eleve,
-                "Moyenne Générale": moy_gen_pessimiste
+                "Moyenne Générale": moy_gen_pessimiste,
+                "Notes Reçues": f"{nb_recu}/{nb_total}"  # <--- Nouvelle Colonne
             })
             
-            # --- B. Extraction des notes par Matière ---
+            # --- B. Extraction par Matière ---
             for nom_ue, details_ue in data_eleve.items():
                 toutes_les_matieres.add(nom_ue)
-                
-                # Calcul de la moyenne de l'UE (Pessimiste)
                 grades = details_ue.get("grades", [])
                 sc = details_ue.get("sc", None)
                 
                 num = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
                 den = sum(g["poids"] for g in grades if g.get("poids") is not None)
-                
                 moy_ue = num / den if den > 0 else 0.0
                 
-                # Seconde chance
                 if sc is not None:
                     moy_ue = max(moy_ue, (moy_ue + sc) / 2)
                 
-                # Ajout dans la liste de la matière
                 if nom_ue not in classement_par_matiere:
                     classement_par_matiere[nom_ue] = []
                 
@@ -573,42 +573,43 @@ with tab5:
                     "Moyenne": moy_ue
                 })
 
-        # 2. Affichage du Classement Général
+        # 2. Affichage Classement Général
         st.markdown("### 🌍 Classement Général (Moyenne Pessimiste)")
         if classement_general:
             df_gen = pd.DataFrame(classement_general).sort_values(by="Moyenne Générale", ascending=False)
             df_gen.reset_index(drop=True, inplace=True)
             df_gen.index += 1
             
-            # Podium visuel
+            # Podium
             if len(df_gen) >= 3:
                 c1, c2, c3 = st.columns(3)
                 c1.metric("🥇 1er", df_gen.iloc[0]['Élève'], f"{df_gen.iloc[0]['Moyenne Générale']:.2f}")
                 c2.metric("🥈 2ème", df_gen.iloc[1]['Élève'], f"{df_gen.iloc[1]['Moyenne Générale']:.2f}")
                 c3.metric("🥉 3ème", df_gen.iloc[2]['Élève'], f"{df_gen.iloc[2]['Moyenne Générale']:.2f}")
 
+            # Tableau avec la nouvelle colonne configurée
             st.dataframe(
                 df_gen,
                 use_container_width=True,
                 column_config={
                     "Moyenne Générale": st.column_config.ProgressColumn(
                         "Moyenne Générale", format="%.2f", min_value=0, max_value=20
+                    ),
+                    "Notes Reçues": st.column_config.TextColumn(
+                        "Notes Reçues",
+                        help="Nombre de notes saisies / Nombre total de notes prévues"
                     )
                 }
             )
         
         st.divider()
 
-        # 3. Affichage du Classement par Matière
+        # 3. Affichage Classement par Matière
         st.markdown("### 📚 Classement par Matière")
-        
-        # Selectbox pour choisir la matière
         if toutes_les_matieres:
             matiere_selectionnee = st.selectbox("Voir le classement pour :", sorted(list(toutes_les_matieres)))
-            
             if matiere_selectionnee:
                 data_matiere = classement_par_matiere.get(matiere_selectionnee, [])
-                
                 if data_matiere:
                     df_mat = pd.DataFrame(data_matiere).sort_values(by="Moyenne", ascending=False)
                     df_mat.reset_index(drop=True, inplace=True)
@@ -619,14 +620,11 @@ with tab5:
                         use_container_width=True,
                         column_config={
                             "Moyenne": st.column_config.ProgressColumn(
-                                f"Moyenne {matiere_selectionnee}", 
-                                format="%.2f", 
-                                min_value=0, 
-                                max_value=20
+                                f"Moyenne {matiere_selectionnee}", format="%.2f", min_value=0, max_value=20
                             )
                         }
                     )
                 else:
-                    st.info(f"Personne n'a de notes pour {matiere_selectionnee}.")
+                    st.info(f"Pas de données pour {matiere_selectionnee}.")
         else:
-            st.info("Aucune matière trouvée dans ce fichier.")
+            st.info("Aucune matière trouvée.")
