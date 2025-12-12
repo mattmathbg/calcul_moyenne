@@ -19,7 +19,7 @@ ue_data_matteo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(None, 0.5), (12, 0.25), (None, 0.25)]
+        "grades": [(None, 0.5), (12, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -31,7 +31,7 @@ ue_data_matteo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (None, 0.5)]
     },
      "Anglais": {
         "coef": 3,
@@ -75,7 +75,7 @@ ue_data_yiru = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(8, 0.5), (None, 0.5)]
     },
      "Anglais": {
         "coef": 3,
@@ -118,7 +118,7 @@ ue_data_ryad = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(13, 0.5), (None, 0.5)]
     },
      "Anglais": {
         "coef": 3,
@@ -205,7 +205,7 @@ ue_data_momo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(17, 0.5), (None, 0.5)]
     },
      "Anglais": {
         "coef": 3,
