@@ -3,60 +3,60 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
-from sqlalchemy import text # Important pour les requêtes SQL
+from supabase import create_client, Client
 
 # ---------- CONFIGURATION PAGE ----------
 st.set_page_config(page_title="Calculateur de Moyenne 🎓", layout="wide")
 
-# ---------- CONNEXION SUPABASE ----------
-# On initialise la connexion SQL définie dans secrets.toml
-conn = st.connection("supabase", type="sql")
+# ---------- CONNEXION SUPABASE (HTTP API) ----------
+# Cette méthode marche à 100% sur Streamlit Cloud
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+supabase = init_connection()
 
 def get_user_from_db(username, password):
-    """Vérifie si l'utilisateur existe et si le mot de passe est bon"""
-    # On utilise :username pour éviter les failles de sécurité (SQL Injection)
-    query = "SELECT * FROM users WHERE username = :u AND password = :p"
-    df = conn.query(query, params={"u": username, "p": password}, ttl=0)
-    
-    if not df.empty:
-        # On retourne les données JSON de la colonne ue_data
-        user_data_raw = df.iloc[0]["ue_data"]
-        # Si c'est vide ou null, on retourne un dict vide
-        if user_data_raw is None:
-            return {}
-        # Si c'est déjà un dict (Supabase le convertit parfois tout seul), on renvoie, sinon on charge le JSON
-        return user_data_raw if isinstance(user_data_raw, dict) else json.loads(user_data_raw)
-    return None
+    """Récupère l'utilisateur via l'API Supabase"""
+    try:
+        # On demande l'utilisateur qui a ce nom ET ce mot de passe
+        response = supabase.table("users").select("*").eq("username", username).eq("password", password).execute()
+        
+        # Si la liste 'data' n'est pas vide, on a trouvé quelqu'un
+        if response.data and len(response.data) > 0:
+            user_row = response.data[0]
+            user_data_raw = user_row.get("ue_data", {})
+            return user_data_raw if isinstance(user_data_raw, dict) else json.loads(user_data_raw)
+        return None
+    except Exception as e:
+        st.error(f"Erreur de connexion : {e}")
+        return None
 
 def save_user_data(username, password, data):
-    """Sauvegarde les données (Update si existe, Insert sinon)"""
-    data_json = json.dumps(data)
-    
-    # Requête UPSERT (Update or Insert) compatible PostgreSQL
-    sql = """
-    INSERT INTO users (username, password, ue_data)
-    VALUES (:u, :p, :d)
-    ON CONFLICT (username) 
-    DO UPDATE SET ue_data = :d;
-    """
-    
-    with conn.session as s:
-        s.execute(
-            text(sql), 
-            {"u": username, "p": password, "d": data_json}
-        )
-        s.commit()
+    """Sauvegarde via l'API (Upsert)"""
+    try:
+        # On prépare la donnée
+        user_entry = {
+            "username": username,
+            "password": password,
+            "ue_data": data # Supabase gère le JSON tout seul
+        }
+        # Upsert = Met à jour si existe, Crée sinon
+        supabase.table("users").upsert(user_entry).execute()
+    except Exception as e:
+        st.error(f"Erreur de sauvegarde : {e}")
 
 # ---------- GESTION LOGIN (SESSION) ----------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.username = ""
-    st.session_state.password = "" # On garde le mdp en mémoire pour les sauvegardes
+    st.session_state.password = ""
     st.session_state.ue_data = {}
 
 def login_page():
     st.markdown("## 🔐 Connexion Étudiant")
-    st.caption("Base de données : Supabase (PostgreSQL)")
     
     with st.form("login"):
         user = st.text_input("Identifiant (ex: matteo)")
@@ -64,7 +64,9 @@ def login_page():
         submit = st.form_submit_button("Entrer")
         
     if submit:
-        user_data = get_user_from_db(user, pwd)
+        with st.spinner("Connexion en cours..."):
+            user_data = get_user_from_db(user, pwd)
+            
         if user_data is not None:
             st.session_state.logged_in = True
             st.session_state.username = user
@@ -74,13 +76,11 @@ def login_page():
             st.rerun()
         else:
             st.error("Identifiant ou mot de passe incorrect.")
-            st.info("💡 Astuce : Crée d'abord l'utilisateur manuellement dans Supabase !")
 
 if not st.session_state.logged_in:
     login_page()
-    st.stop() # Arrête le script ici tant qu'on n'est pas connecté
+    st.stop()
 
-# ---------- SIDEBAR ----------
 with st.sidebar:
     st.write(f"👤 Connecté : **{st.session_state.username}**")
     if st.button("Déconnexion"):
@@ -90,6 +90,7 @@ with st.sidebar:
         st.rerun()
     st.divider()
 
+# ... LA SUITE DU CODE NE CHANGE PAS (A PARTIR DU CSS) ...
 # ---------- CSS PERSONNALISÉ ----------
 st.markdown("""
     <style>

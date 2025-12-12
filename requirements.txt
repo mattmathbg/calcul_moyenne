@@ -1,6 +1,4 @@
 streamlit
 pandas
 plotly
-sqlalchemy
-pg8000
-st-supabase-connection
+supabase
