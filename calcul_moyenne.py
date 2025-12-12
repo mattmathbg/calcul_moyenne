@@ -3,18 +3,92 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
-import io
-import glob
-import importlib.util
-import os
+from sqlalchemy import text # Important pour les requêtes SQL
 
 # ---------- CONFIGURATION PAGE ----------
-st.set_page_config(
-    page_title="Calculateur de Moyenne 🎓",
-    page_icon="🎓",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Calculateur de Moyenne 🎓", layout="wide")
+
+# ---------- CONNEXION SUPABASE ----------
+# On initialise la connexion SQL définie dans secrets.toml
+conn = st.connection("supabase", type="sql")
+
+def get_user_from_db(username, password):
+    """Vérifie si l'utilisateur existe et si le mot de passe est bon"""
+    # On utilise :username pour éviter les failles de sécurité (SQL Injection)
+    query = "SELECT * FROM users WHERE username = :u AND password = :p"
+    df = conn.query(query, params={"u": username, "p": password}, ttl=0)
+    
+    if not df.empty:
+        # On retourne les données JSON de la colonne ue_data
+        user_data_raw = df.iloc[0]["ue_data"]
+        # Si c'est vide ou null, on retourne un dict vide
+        if user_data_raw is None:
+            return {}
+        # Si c'est déjà un dict (Supabase le convertit parfois tout seul), on renvoie, sinon on charge le JSON
+        return user_data_raw if isinstance(user_data_raw, dict) else json.loads(user_data_raw)
+    return None
+
+def save_user_data(username, password, data):
+    """Sauvegarde les données (Update si existe, Insert sinon)"""
+    data_json = json.dumps(data)
+    
+    # Requête UPSERT (Update or Insert) compatible PostgreSQL
+    sql = """
+    INSERT INTO users (username, password, ue_data)
+    VALUES (:u, :p, :d)
+    ON CONFLICT (username) 
+    DO UPDATE SET ue_data = :d;
+    """
+    
+    with conn.session as s:
+        s.execute(
+            text(sql), 
+            {"u": username, "p": password, "d": data_json}
+        )
+        s.commit()
+
+# ---------- GESTION LOGIN (SESSION) ----------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.session_state.password = "" # On garde le mdp en mémoire pour les sauvegardes
+    st.session_state.ue_data = {}
+
+def login_page():
+    st.markdown("## 🔐 Connexion Étudiant")
+    st.caption("Base de données : Supabase (PostgreSQL)")
+    
+    with st.form("login"):
+        user = st.text_input("Identifiant (ex: matteo)")
+        pwd = st.text_input("Mot de passe", type="password")
+        submit = st.form_submit_button("Entrer")
+        
+    if submit:
+        user_data = get_user_from_db(user, pwd)
+        if user_data is not None:
+            st.session_state.logged_in = True
+            st.session_state.username = user
+            st.session_state.password = pwd
+            st.session_state.ue_data = user_data
+            st.success("Connexion réussie !")
+            st.rerun()
+        else:
+            st.error("Identifiant ou mot de passe incorrect.")
+            st.info("💡 Astuce : Crée d'abord l'utilisateur manuellement dans Supabase !")
+
+if not st.session_state.logged_in:
+    login_page()
+    st.stop() # Arrête le script ici tant qu'on n'est pas connecté
+
+# ---------- SIDEBAR ----------
+with st.sidebar:
+    st.write(f"👤 Connecté : **{st.session_state.username}**")
+    if st.button("Déconnexion"):
+        st.session_state.logged_in = False
+        st.session_state.password = ""
+        st.session_state.ue_data = {}
+        st.rerun()
+    st.divider()
 
 # ---------- CSS PERSONNALISÉ ----------
 st.markdown("""
