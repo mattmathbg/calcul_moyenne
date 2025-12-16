@@ -11,7 +11,7 @@ ue_data_matteo = {
     },
     "Stats": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (7, 0.5)]
     },
     "CMBD": {
         "coef": 3,
@@ -55,7 +55,7 @@ ue_data_yiru = {
     },
     "Stats": {
         "coef": 3,
-        "grades": [(5, 0.5), (None, 0.5)]
+        "grades": [(5, 0.5), (6, 0.5)]
     },
     "CMBD": {
         "coef": 3,
@@ -98,7 +98,7 @@ ue_data_ryad = {
     },
     "Stats": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (10, 0.5)]
     },
     "CMBD": {
         "coef": 3,
@@ -161,7 +161,7 @@ ue_data_hugo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(7, 0.5), (None, 0.5)]
     },
      "Anglais": {
         "coef": 3,
