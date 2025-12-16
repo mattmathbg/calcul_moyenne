@@ -141,7 +141,7 @@ ue_data_hugo = {
     },
     "Stats": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (7, 0.5)]
     },
     "CMBD": {
         "coef": 3,
