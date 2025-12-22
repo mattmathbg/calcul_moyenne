@@ -39,7 +39,7 @@ ue_data_matteo = {
     },
      "AAS": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (None, 0.5)]
     },
 }
 
