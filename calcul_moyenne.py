@@ -7,6 +7,7 @@ import io
 import glob
 import importlib.util
 import os
+import joblib
 
 # ---------- CONFIGURATION PAGE ----------
 st.set_page_config(
@@ -229,8 +230,7 @@ with st.sidebar:
 st.title("Calculateur de Moyenne Étudiante 🎓")
 
 # Création des onglets
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏆 classement"])
-
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏆 classement", "🚀 Insertion Pro"])
 # === TAB 1: DASHBOARD ===
 with tab1:
     details, moy_actuelle, moy_pessimiste, valides, total_ues, total_coef_pessimiste = calcul_metriques(st.session_state.ue_data)    
@@ -628,3 +628,51 @@ with tab5:
                     st.info(f"Pas de données pour {matiere_selectionnee}.")
         else:
             st.info("Aucune matière trouvée.")
+# === TAB 6: PRÉDICTION INSERTION PRO (MODÈLE ML) ===
+with tab6:
+    st.subheader("🚀 Prédicteur d'Insertion & Salaire")
+    
+    # Vérification des fichiers
+    if not os.path.exists('modele_insertion_master.pkl') or not os.path.exists('model_metadata.json'):
+        st.warning("⚠️ Modèle non détecté. Exécutez la cellule d'export dans votre Notebook Projet.ipynb.")
+    else:
+        # Chargement
+        model = joblib.load('modele_insertion_master.pkl')
+        with open('model_metadata.json', 'r') as f:
+            meta = json.load(f)
+
+        st.info("Ce modèle prédit votre futur professionnel basé sur les données historiques des Masters.")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            s_disc = st.selectbox("Discipline", sorted(meta['categories']['discipline']))
+            s_acad = st.selectbox("Académie", sorted(meta['categories']['academie']))
+            s_sit = st.selectbox("Échéance", meta['categories']['situation'])
+        with c2:
+            s_poids = st.slider("Poids de la discipline (%)", 0.0, 100.0, 20.0)
+            s_boursiers = st.slider("Taux de boursiers (%)", 0.0, 100.0, 30.0)
+            s_annee = st.number_input("Année de référence", 2020, 2025, 2022)
+
+        if st.button("Lancer la prédiction 🔮", use_container_width=True):
+            # Préparation des données (One-Hot Encoding dynamique)
+            input_df = pd.DataFrame(0, index=[0], columns=meta['features'])
+            
+            # Variables numériques
+            if 'poids_de_la_discipline' in input_df.columns: input_df['poids_de_la_discipline'] = s_poids
+            if 'de_diplomes_boursiers' in input_df.columns: input_df['de_diplomes_boursiers'] = s_boursiers
+            if 'annee' in input_df.columns: input_df['annee'] = s_annee
+            
+            # Variables catégorielles (Dummies)
+            for col in input_df.columns:
+                if col in [f"discipline_{s_disc}", f"academie_{s_acad}", f"situation_{s_sit}"]:
+                    input_df[col] = 1
+            
+            # Calcul
+            preds = model.predict(input_df)
+            
+            # Affichage
+            st.divider()
+            res1, res2 = st.columns(2)
+            res1.metric("Taux d'insertion estimé", f"{preds[0][0]:.1f} %")
+            res2.metric("Salaire Net Médian", f"{preds[0][1]:,.0f} €")
+            st.balloons()
