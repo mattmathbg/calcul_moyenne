@@ -1,3 +1,4 @@
+import sys
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -7,7 +8,17 @@ import io
 import glob
 import importlib.util
 import os
-import joblib
+# --- HACK POUR FORCER L'INSTALLATION ---
+try:
+    import joblib
+    import xgboost
+except ImportError:
+    st.warning("Installation des bibliothèques en cours... (ça peut prendre une minute)")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "joblib", "xgboost", "scikit-learn", "pandas"])
+    import joblib
+    import xgboost
+    st.success("Installation terminée ! Rechargez la page si nécessaire.")
+# ---------------------------------------
 
 # ---------- CONFIGURATION PAGE ----------
 st.set_page_config(
