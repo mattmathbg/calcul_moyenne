@@ -660,7 +660,6 @@ with tab6:
             s_acad = st.selectbox("Académie", sorted(meta['categories']['academie']))
             s_sit = st.selectbox("Échéance", meta['categories']['situation'])
         with c2:
-            s_poids = st.slider("Poids de la discipline (%)", 0.0, 100.0, 20.0)
             s_boursiers = st.slider("Taux de boursiers (%)", 0.0, 100.0, 30.0)
             s_annee = st.number_input("Année de référence", 2020, 2025, 2022)
 
@@ -669,7 +668,8 @@ with tab6:
             input_df = pd.DataFrame(0, index=[0], columns=meta['features'])
             
             # Variables numériques
-            if 'poids_de_la_discipline' in input_df.columns: input_df['poids_de_la_discipline'] = s_poids
+            # Valeur par défaut invisible (15%)
+            if 'poids_de_la_discipline' in input_df.columns: input_df['poids_de_la_discipline'] = 15.0
             if 'de_diplomes_boursiers' in input_df.columns: input_df['de_diplomes_boursiers'] = s_boursiers
             if 'annee' in input_df.columns: input_df['annee'] = s_annee
             
