@@ -27,7 +27,7 @@ ue_data_matteo = {
     },
      "Réseaux 2": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (10, 0.5)]
     },
     "Analyse de données": {
         "coef": 3,
@@ -114,7 +114,7 @@ ue_data_ryad = {
     },
      "Réseaux 2": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (16.24, 0.5)]
     },
     "Analyse de données": {
         "coef": 3,
@@ -126,7 +126,7 @@ ue_data_ryad = {
     },
      "architecture": {
         "coef": 3,
-        "grades": [(13.5, 0.5), (None, 0.5)]
+        "grades": [(13.5, 0.5), (15, 0.5)]
     },
 }
 
@@ -157,7 +157,7 @@ ue_data_hugo = {
     },
      "Réseaux 2": {
         "coef": 3,
-        "grades": [(13.5, 0.5), (None, 0.5)]
+        "grades": [(13.5, 0.5), (13.38, 0.5)]
     },
     "Analyse de données": {
         "coef": 3,
@@ -169,7 +169,7 @@ ue_data_hugo = {
     },
      "AAS": {
         "coef": 3,
-        "grades": [(None, 0.5), (None, 0.5)]
+        "grades": [(9.5, 0.5), (None, 0.5)]
     },
 }
 
