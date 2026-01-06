@@ -47,7 +47,7 @@ ue_data_matteo = {
 ue_data_yiru = {
     "LF": {
         "coef": 3,
-        "grades": [(13, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
+        "grades": [(13, 0.5), (None, 0.5)]  # Notes de E1 et E2
     },
     "CPOOA": {
         "coef": 3,
