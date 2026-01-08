@@ -1,5 +1,6 @@
 import sys
 import streamlit as st
+import copy
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -241,8 +242,8 @@ with st.sidebar:
 st.title("Calculateur de Moyenne Étudiante 🎓")
 
 # Création des onglets
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏆 classement", "🚀 Insertion Pro"])
-# === TAB 1: DASHBOARD ===
+# Modifiez cette ligne pour ajouter "🔄 Rattrapages" à la fin
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📊 Tableau de Bord", "📝 Saisie & UEs", "🔮 Simulation", "📋 Détails Raw", "🏆 classement", "🚀 Insertion Pro", "🔄 Rattrapages"])# === TAB 1: DASHBOARD ===
 with tab1:
     details, moy_actuelle, moy_pessimiste, valides, total_ues, total_coef_pessimiste = calcul_metriques(st.session_state.ue_data)    
     if not st.session_state.ue_data:
@@ -687,3 +688,61 @@ with tab6:
             res1.metric("Taux d'insertion estimé", f"{preds[0][0]:.1f} %")
             res2.metric("Salaire Net Médian", f"{preds[0][1]:,.0f} €")
             st.balloons()
+# === TAB 7: RATTRAPAGES ===
+with tab7:
+    st.subheader("🔄 Simulation des Rattrapages (Secondes Chances)")
+    st.info("Simulez l'impact de vos notes de rattrapage sur la moyenne générale. La règle appliquée est : Max(Moyenne, (Moyenne + Note_SC) / 2).")
+
+    if not st.session_state.ue_data:
+        st.warning("Veuillez charger des données d'abord.")
+    else:
+        # Layout: 2 colonnes
+        col_sim_gauche, col_sim_droite = st.columns([1, 1])
+        
+        # On travaille sur une copie deepcopy pour ne pas modifier les vraies données
+        simulated_data = copy.deepcopy(st.session_state.ue_data)
+        
+        with col_sim_gauche:
+            st.markdown("### 🎚️ Ajustez vos notes SC")
+            for nom, details in simulated_data.items():
+                # Récupération moyenne actuelle pour info (sans recalculer tout)
+                grades = details.get("grades", [])
+                num = sum(g["note"] * g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+                den = sum(g["poids"] for g in grades if g.get("note") is not None and g.get("poids") is not None)
+                curr_avg = num/den if den > 0 else 0.0
+                
+                # Valeur par défaut : Soit la SC existante, soit 10
+                default_sc = details.get("sc")
+                if default_sc is None: default_sc = 10.0
+                
+                # Slider
+                new_sc = st.slider(f"{nom} (Moy. Actuelle : {curr_avg:.2f})", 0.0, 20.0, float(default_sc), step=0.5, key=f"sim_sc_{nom}")
+                
+                # Mise à jour de la data simulée
+                details["sc"] = new_sc
+
+        with col_sim_droite:
+            st.markdown("### 🔮 Résultats Projetés")
+            
+            # Recalcul complet avec les nouvelles SC simulées
+            res_det, moy_act, moy_pess, valides, total_ues, _ = calcul_metriques(simulated_data)
+            
+            # Affichage métriques
+            c1, c2 = st.columns(2)
+            c1.metric("Nouvelle Moyenne", f"{moy_pess:.2f}/20", delta="Moyenne Pessimiste Simulée")
+            c2.metric("UE Validées", f"{valides}/{total_ues}")
+            
+            # Calcul du gain par rapport à la moyenne originale
+            _, _, moy_orig_pess, _, _, _ = calcul_metriques(st.session_state.ue_data)
+            delta = moy_pess - moy_orig_pess
+            if abs(delta) > 0.01:
+                st.caption(f"Gain grâce aux rattrapages : {delta:+.2f} points")
+            
+            # Tableau détaillé
+            st.write("#### Détails par UE")
+            df_sim = pd.DataFrame(res_det)
+            if not df_sim.empty:
+                st.dataframe(
+                    df_sim[["UE", "Moyenne", "Statut"]], 
+                    use_container_width=True
+                )
