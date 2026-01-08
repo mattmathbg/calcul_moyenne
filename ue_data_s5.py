@@ -19,7 +19,7 @@ ue_data_matteo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(13.33, 0.5), (12, 0.5)]
+        "grades": [(13.33, 0.5), (12, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -63,7 +63,7 @@ ue_data_yiru = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(16, 0.5), (15, 0.5)]
+        "grades": [(16, 0.5), (15, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -106,7 +106,7 @@ ue_data_ryad = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(17, 0.5), (16, 0.5)]
+        "grades": [(16, 0.5), (17, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -149,7 +149,7 @@ ue_data_hugo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(6.33, 0.5), (7, 0.5)]
+        "grades": [(6.33, 0.5), (7, 0.25), (None, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
