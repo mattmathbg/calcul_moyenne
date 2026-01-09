@@ -90,7 +90,7 @@ ue_data_yiru = {
 ue_data_ryad = {
     "LF": {
         "coef": 3,
-        "grades": [(10, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
+        "grades": [(10, 0.5), (10, 0.5)]  # Notes de E1, E2 et E3
     },
     "CPOOA": {
         "coef": 3,
@@ -133,7 +133,7 @@ ue_data_ryad = {
 ue_data_hugo = {
     "LF": {
         "coef": 3,
-        "grades": [(10, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
+        "grades": [(10, 0.5), (7, 0.5)]  # Notes de E1, E2 et E3
     },
     "CPOOA": {
         "coef": 3,
@@ -197,7 +197,7 @@ ue_data_momo = {
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(13  , 0.5), (None,0.5)]
+        "grades": [(13, 0.5), (None,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
