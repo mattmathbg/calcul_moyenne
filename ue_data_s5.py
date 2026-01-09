@@ -3,7 +3,7 @@
 ue_data_matteo = {
     "LF": {
         "coef": 3,
-        "grades": [(10, 0.5), (None, 0.5)]  # Notes de E1, E2 et E3
+        "grades": [(10, 0.5), (12, 0.5)]  # Notes de E1, E2 et E3
     },
     "CPOOA": {
         "coef": 3,
@@ -47,7 +47,7 @@ ue_data_matteo = {
 ue_data_yiru = {
     "LF": {
         "coef": 3,
-        "grades": [(13, 0.5), (None, 0.5)]  # Notes de E1 et E2
+        "grades": [(13, 0.5), (10, 0.5)]  # Notes de E1 et E2
     },
     "CPOOA": {
         "coef": 3,
@@ -67,11 +67,11 @@ ue_data_yiru = {
     },
      "Systeme 2": {
         "coef": 3,
-        "grades": [(15, 0.5), (12,0.5)]
+        "grades": [(15.5, 0.5), (12,0.5)]
     },
      "Réseaux 2": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(12.5, 0.5), (15.6, 0.5)]
     },
     "Analyse de données": {
         "coef": 3,
@@ -83,7 +83,7 @@ ue_data_yiru = {
     },
      "architecture": {
         "coef": 3,
-        "grades": [(19, 0.5), (None, 0.5)]
+        "grades": [(19, 0.5), (15.5, 0.5)]
     },
 }
 
