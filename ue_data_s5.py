@@ -35,7 +35,7 @@ ue_data_matteo = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(14, 0.5), (None, 0.5)]
+        "grades": [(14, 0.5), (10.8, 0.5)]
     },
      "AAS": {
         "coef": 3,
@@ -165,7 +165,7 @@ ue_data_hugo = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(13.5, 0.5), (None, 0.5)]
+        "grades": [(13.5, 0.5), (13, 0.5)]
     },
      "AAS": {
         "coef": 3,
@@ -209,7 +209,7 @@ ue_data_momo = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (13.9, 0.5)]
     },
      "architecture": {
         "coef": 3,
