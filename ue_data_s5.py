@@ -79,7 +79,7 @@ ue_data_yiru = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (11.9, 0.5)]
     },
      "architecture": {
         "coef": 3,
@@ -122,7 +122,7 @@ ue_data_ryad = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(15, 0.5), (None, 0.5)]
+        "grades": [(15, 0.5), (14.6, 0.5)]
     },
      "architecture": {
         "coef": 3,
