@@ -252,7 +252,7 @@ ue_data_robin = {
     },
      "Anglais": {
         "coef": 3,
-        "grades": [(15, 0.5), (None, 0.5)]
+        "grades": [(15, 0.5), (12, 0.5)]
     },
      "architecture": {
         "coef": 3,
