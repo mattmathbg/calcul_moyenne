@@ -236,7 +236,7 @@ ue_data_robin = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(15.5, 0.25), (None, 0.25), (15.33, 0.5)]
+        "grades": [(15.5, 0.25), (12.8, 0.25), (15.33, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
