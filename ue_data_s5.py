@@ -161,7 +161,7 @@ ue_data_hugo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(7, 0.5), (None, 0.5)]
+        "grades": [(7, 0.5), (14, 0.5)]
     },
      "Anglais": {
         "coef": 3,
