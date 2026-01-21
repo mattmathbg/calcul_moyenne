@@ -19,7 +19,7 @@ ue_data_matteo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(13.33, 0.5), (12, 0.25), (None, 0.25)]
+        "grades": [(13.33, 0.5), (12.8, 0.5)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -39,7 +39,7 @@ ue_data_matteo = {
     },
      "AAS": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (10, 0.5)]
     },
 }
 
@@ -55,7 +55,7 @@ ue_data_yiru = {
     },
     "Stats": {
         "coef": 3,
-        "grades": [(5, 0.5), (6, 0.5)]
+        "grades": [(7.75, 1)]
     },
     "CMBD": {
         "coef": 3,
@@ -63,7 +63,7 @@ ue_data_yiru = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(16, 0.5), (15, 0.25), (None, 0.25)]
+        "grades": [(16, 0.5), (15, 0.25), (12.8, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -106,7 +106,7 @@ ue_data_ryad = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(16, 0.5), (17, 0.25), (None, 0.25)]
+        "grades": [(16, 0.5), (17, 0.25), (12.8, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -149,7 +149,7 @@ ue_data_hugo = {
     },
     "Application web": {
         "coef": 3,
-        "grades": [(6.33, 0.5), (7, 0.25), (None, 0.25)]
+        "grades": [(6.33, 0.5), (7, 0.25), (13.36, 0.25)]
     },
      "Systeme 2": {
         "coef": 3,
@@ -169,7 +169,7 @@ ue_data_hugo = {
     },
      "AAS": {
         "coef": 3,
-        "grades": [(9.5, 0.5), (None, 0.5)]
+        "grades": [(9.5, 0.5), (10, 0.5)]
     },
 }
 
