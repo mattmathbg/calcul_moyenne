@@ -31,7 +31,7 @@ ue_data_matteo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(11, 0.5), (None, 0.5)]
+        "grades": [(11, 0.5), (14, 0.5)]
     },
      "Anglais": {
         "coef": 3,
@@ -75,7 +75,7 @@ ue_data_yiru = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(8, 0.5), (None, 0.5)]
+        "grades": [(8, 0.5), (11, 0.5)]
     },
      "Anglais": {
         "coef": 3,
@@ -248,7 +248,7 @@ ue_data_robin = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(10, 0.5), (None, 0.5)]
+        "grades": [(10, 0.5), (14, 0.5)]
     },
      "Anglais": {
         "coef": 3,
