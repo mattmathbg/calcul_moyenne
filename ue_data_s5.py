@@ -118,7 +118,7 @@ ue_data_ryad = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(13, 0.5), (None, 0.5)]
+        "grades": [(13, 0.5), (14, 0.5)]
     },
      "Anglais": {
         "coef": 3,
