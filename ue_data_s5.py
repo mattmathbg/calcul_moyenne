@@ -205,7 +205,7 @@ ue_data_momo = {
     },
     "Analyse de données": {
         "coef": 3,
-        "grades": [(17, 0.5), (None, 0.5)]
+        "grades": [(17, 0.5), (12, 0.5)]
     },
      "Anglais": {
         "coef": 3,
