@@ -137,7 +137,7 @@ ue_data_hugo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(8.57, 0.5), (None, 0.5)]
+        "grades": [(8.57, 0.5), (5.3, 0.5)]
     },
     "Stats": {
         "coef": 3,
