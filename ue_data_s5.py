@@ -7,7 +7,7 @@ ue_data_matteo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(12, 0.5), (None, 0.5)]
+        "grades": [(12, 0.5), (7.11, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -51,7 +51,7 @@ ue_data_yiru = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(14.5, 0.5), (None, 0.5)]
+        "grades": [(14.5, 0.5), (11.8, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -94,7 +94,7 @@ ue_data_ryad = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(13.4, 0.5), (None, 0.5)]
+        "grades": [(13.4, 0.5), (12.5, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -181,7 +181,7 @@ ue_data_momo = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(12.64, 0.5), (None, 0.5)]
+        "grades": [(12.64, 0.5), (9.36, 0.5)]
     },
     "Stats": {
         "coef": 3,
@@ -224,7 +224,7 @@ ue_data_robin = {
     },
     "CPOOA": {
         "coef": 3,
-        "grades": [(13.38, 0.5), (None, 0.5)]
+        "grades": [(13.38, 0.5), (13.46, 0.5)]
     },
     "Stats": {
         "coef": 3,
