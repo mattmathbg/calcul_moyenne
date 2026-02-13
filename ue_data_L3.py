@@ -44,7 +44,7 @@ ue_data_yiru = {
     "Architecture": { "coef": 3, "semestre": "S1", "grades": [(19, 0.5), (15.5, 0.5)], "sc": None },
 
     # --- SEMESTRE 2 ---
-    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(15, 0.5), (None, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
@@ -96,7 +96,7 @@ ue_data_hugo = {
     "AAS": { "coef": 3, "semestre": "S1", "grades": [(9.5, 0.5), (10, 0.5)], "sc": None },
 
     # --- SEMESTRE 2 ---
-    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(12.5, 0.5), (None, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
@@ -148,7 +148,7 @@ ue_data_robin = {
     "Architecture": { "coef": 3, "semestre": "S1", "grades": [(14.5, 0.5), (16.5, 0.5)], "sc": None },
 
     # --- SEMESTRE 2 ---
-    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(12.25, 0.5), (None, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
