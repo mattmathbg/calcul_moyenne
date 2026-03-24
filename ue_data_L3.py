@@ -21,11 +21,11 @@ ue_data_matteo = {
     "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(18.25, 0.5), (None, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(8, 0.5), (None, 0.5)], "sc": None },
     "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(18, 0.5), (None, 0.5)], "sc": None },
-    "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "PPIL/stage": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "algo dynamique": { "coef": 3, "semestre": "S2", "grades": [(8.5, 0.5), (None, 0.5)], "sc": None },
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (None, 0.5)], "sc": None },
-    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(11, 0.5), (None, 0.5)], "sc": None },
     "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14, 0.5), (None, 0.5)], "sc": None },
 }
