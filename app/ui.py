@@ -11,7 +11,6 @@ def ui_sidebar():
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # Gestion Fichiers Locaux
         datasets = DataManager.scanner_fichiers_locaux()
         if datasets:
             f_choisi = st.selectbox("Fichier", list(datasets.keys()))
@@ -41,10 +40,11 @@ def ui_dashboard():
     res = Calculator.compute_stats(st.session_state.ue_data)
     
     # Indicateurs
-    c_main, c_det = st.columns([1, 2])
+    c_main, c_det = st.columns()
     with c_main:
         delta = res['Année'] - 10
-        st.metric("Moyenne Annuelle", f"{res['Année']:.2f}/20", delta=f"{delta:.2f}")
+        st.metric("Moyenne Annuelle (Pessimiste)", f"{res['Année']:.2f}/20", delta=f"{delta:.2f}")
+        st.metric("🎯 Moyenne Actuelle (réelle)", f"{res['Actuelle']:.2f}/20", help="Moyenne basée uniquement sur les notes déjà reçues.")
         
         if res['Année'] >= 10:
             msg = "✅ VALIDÉ PAR COMPENSATION" if (res['S1'] < 10 or res['S2'] < 10) else "🎉 ANNÉE VALIDÉE"
@@ -61,32 +61,41 @@ def ui_dashboard():
         for val, title, col in [(res['S1'], "S1", "#3498db"), (res['S2'], "S2", "#9b59b6")]:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number", value=val, title={'text': title},
-                gauge={'axis': {'range': [0, 20]}, 'bar': {'color': col}, 'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 10}}
+                gauge={'axis': {'range':}, 'bar': {'color': col}, 'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 10}}
             ))
             fig.update_layout(height=120, margin=dict(l=10,r=10,t=10,b=10))
             if title == "S1": c1.plotly_chart(fig, use_container_width=True) 
             else: c2.plotly_chart(fig, use_container_width=True)
 
+    st.divider()
+    
+    # --- Affichage des Catégories ---
+    if res['categories']:
+        st.subheader("📚 Moyennes par Catégorie")
+        cat_cols = st.columns(len(res['categories']))
+        for i, (cat_name, cat_val) in enumerate(res['categories'].items()):
+            cat_cols[i].metric(cat_name, f"{cat_val:.2f}/20")
+
     # Graphique général
     if res['details']:
         df = pd.DataFrame(res['details'])
-        fig = px.bar(df, x="Nom", y="Moyenne", color="Semestre", text="Moyenne",
-                     color_discrete_map={"S1": "#3498db", "S2": "#9b59b6"})
+        fig = px.bar(df, x="Nom", y="Moyenne", color="Catégorie", text="Moyenne", hover_data=["Semestre", "Moyenne Actuelle"])
         fig.add_hline(y=10, line_dash="dash")
         st.plotly_chart(fig, use_container_width=True)
 
 def ui_input():
     st.header("📝 Saisie des notes")
-    c_add, c_edit = st.columns([1, 2])
+    c_add, c_edit = st.columns()
     
     with c_add:
         st.subheader("Ajouter UE")
         with st.form("new_ue"):
             nom = st.text_input("Nom")
+            cat = st.text_input("Catégorie", "Général") # NOUVEAU
             coef = st.number_input("Coef", 1.0, 30.0)
             sem = st.radio("Semestre", ["S1", "S2"], horizontal=True)
             if st.form_submit_button("Créer") and nom:
-                st.session_state.ue_data[nom] = {"coef": coef, "semestre": sem, "grades": [], "sc": None}
+                st.session_state.ue_data[nom] = {"coef": coef, "semestre": sem, "categorie": cat, "grades": [], "sc": None}
                 st.rerun()
 
     with c_edit:
@@ -95,10 +104,11 @@ def ui_input():
             ue = st.selectbox("Choisir UE", list(st.session_state.ue_data.keys()))
             data = st.session_state.ue_data[ue]
             
-            c1, c2, c3 = st.columns(3)
+            c1, c2, c3, c4 = st.columns(4)
             data["coef"] = c1.number_input("Coef", 0.0, key="e_c", value=float(data["coef"]))
             data["semestre"] = c2.selectbox("Sem", ["S1", "S2"], index=0 if data.get("semestre")=="S1" else 1)
-            data["sc"] = c3.number_input("Rattrapage", 0.0, 20.0, value=data.get("sc"))
+            data["categorie"] = c3.text_input("Catégorie", value=data.get("categorie", "Général")) # NOUVEAU
+            data["sc"] = c4.number_input("Rattrapage", 0.0, 20.0, value=data.get("sc"))
             
             df = pd.DataFrame(data["grades"])
             if df.empty: df = pd.DataFrame(columns=["note", "poids"])

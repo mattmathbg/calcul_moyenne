@@ -22,7 +22,7 @@ class DataManager:
             for g in raw_grades:
                 note, poids = None, None
                 if isinstance(g, (list, tuple)) and len(g) >= 2:
-                    note, poids = g[0], g[1]
+                    note, poids = g, g
                 elif isinstance(g, dict):
                     note, poids = g.get("note"), g.get("poids")
                 
@@ -34,6 +34,7 @@ class DataManager:
             data_propre[ue] = {
                 "coef": float(details.get("coef", 1.0)),
                 "semestre": details.get("semestre", "S1"),
+                "categorie": details.get("categorie", "Général"), # NOUVEAU
                 "sc": details.get("seconde_chance", details.get("sc", None)),
                 "grades": grades_clean
             }
