@@ -24,19 +24,19 @@ class Calculator:
         stats = {
             "S1": {"points": 0, "coefs": 0, "ues": []},
             "S2": {"points": 0, "coefs": 0, "ues": []},
-            "Actuelle": {"points": 0, "coefs": 0} # Nouvelle stat
+            "Actuelle": {"points": 0, "coefs": 0}
         }
         
-        categories = {} # Nouvelle stat pour les catégories
+        categories = {}
         
         for nom, details in data.items():
             moyenne_pessimiste = Calculator._calculer_moyenne_ue(details)
             coef = details.get("coef", 1.0)
             sem = details.get("semestre", "S1")
-            cat = details.get("categorie", "Général") # Récupération de la catégorie
+            cat = details.get("categorie", "Général")
             target = "S1" if sem in ["S1", 1] else "S2"
             
-            # --- 1. Calcul de la Moyenne Actuelle (bête, juste les notes reçues) ---
+            # --- Calcul de la Moyenne Actuelle ---
             grades = details.get("grades", [])
             valid_grades = [g for g in grades if g.get("note") is not None and g.get("poids")]
             moyenne_actuelle = None
@@ -45,7 +45,7 @@ class Calculator:
                 stats["Actuelle"]["points"] += moyenne_actuelle * coef
                 stats["Actuelle"]["coefs"] += coef
 
-            # --- 2. Statistiques par Catégorie ---
+            # --- Statistiques par Catégorie ---
             if cat not in categories:
                 categories[cat] = {"points": 0, "coefs": 0}
             categories[cat]["points"] += moyenne_pessimiste * coef

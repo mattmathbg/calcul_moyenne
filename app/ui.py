@@ -44,7 +44,7 @@ def ui_dashboard():
     with c_main:
         delta = res['Année'] - 10
         st.metric("Moyenne Annuelle (Pessimiste)", f"{res['Année']:.2f}/20", delta=f"{delta:.2f}")
-        st.metric("🎯 Moyenne Actuelle (réelle)", f"{res['Actuelle']:.2f}/20", help="Moyenne basée uniquement sur les notes déjà reçues.")
+        st.metric("🎯 Moyenne Actuelle (réelle)", f"{res['Actuelle']:.2f}/20", help="Basée uniquement sur les notes reçues.")
         
         if res['Année'] >= 10:
             msg = "✅ VALIDÉ PAR COMPENSATION" if (res['S1'] < 10 or res['S2'] < 10) else "🎉 ANNÉE VALIDÉE"
@@ -70,14 +70,14 @@ def ui_dashboard():
     st.divider()
     
     # --- Affichage des Catégories ---
-    if res['categories']:
+    if res.get('categories'):
         st.subheader("📚 Moyennes par Catégorie")
         cat_cols = st.columns(len(res['categories']))
         for i, (cat_name, cat_val) in enumerate(res['categories'].items()):
             cat_cols[i].metric(cat_name, f"{cat_val:.2f}/20")
 
     # Graphique général
-    if res['details']:
+    if res.get('details'):
         df = pd.DataFrame(res['details'])
         fig = px.bar(df, x="Nom", y="Moyenne", color="Catégorie", text="Moyenne", hover_data=["Semestre", "Moyenne Actuelle"])
         fig.add_hline(y=10, line_dash="dash")
@@ -91,7 +91,7 @@ def ui_input():
         st.subheader("Ajouter UE")
         with st.form("new_ue"):
             nom = st.text_input("Nom")
-            cat = st.text_input("Catégorie", "Général") # NOUVEAU
+            cat = st.text_input("Catégorie", "Général")
             coef = st.number_input("Coef", 1.0, 30.0)
             sem = st.radio("Semestre", ["S1", "S2"], horizontal=True)
             if st.form_submit_button("Créer") and nom:
@@ -107,7 +107,7 @@ def ui_input():
             c1, c2, c3, c4 = st.columns(4)
             data["coef"] = c1.number_input("Coef", 0.0, key="e_c", value=float(data["coef"]))
             data["semestre"] = c2.selectbox("Sem", ["S1", "S2"], index=0 if data.get("semestre")=="S1" else 1)
-            data["categorie"] = c3.text_input("Catégorie", value=data.get("categorie", "Général")) # NOUVEAU
+            data["categorie"] = c3.text_input("Catégorie", value=data.get("categorie", "Général"))
             data["sc"] = c4.number_input("Rattrapage", 0.0, 20.0, value=data.get("sc"))
             
             df = pd.DataFrame(data["grades"])

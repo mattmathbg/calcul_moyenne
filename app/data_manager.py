@@ -34,7 +34,7 @@ class DataManager:
             data_propre[ue] = {
                 "coef": float(details.get("coef", 1.0)),
                 "semestre": details.get("semestre", "S1"),
-                "categorie": details.get("categorie", "Général"), # NOUVEAU
+                "categorie": details.get("categorie", "Général"),
                 "sc": details.get("seconde_chance", details.get("sc", None)),
                 "grades": grades_clean
             }
