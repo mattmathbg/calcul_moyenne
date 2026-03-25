@@ -40,7 +40,7 @@ def ui_dashboard():
     res = Calculator.compute_stats(st.session_state.ue_data)
     
     # Indicateurs
-    c_main, c_det = st.columns()
+    c_main, c_det = st.columns(2)
     with c_main:
         delta = res['Année'] - 10
         st.metric("Moyenne Annuelle (Pessimiste)", f"{res['Année']:.2f}/20", delta=f"{delta:.2f}")
@@ -75,7 +75,7 @@ def ui_dashboard():
 
 def ui_input():
     st.header("📝 Saisie des notes")
-    c_add, c_edit = st.columns()
+    c_add, c_edit = st.columns(2)
     
     with c_add:
         st.subheader("Ajouter UE")

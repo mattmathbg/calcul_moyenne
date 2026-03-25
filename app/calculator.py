@@ -7,9 +7,15 @@ class Calculator:
         
         # Pessimiste : note manquante = 0
         # On force la conversion en float() pour éviter les TypeError
-        num = sum((float(g["note"]) if g["note"] is not None else 0.0) * float(g["poids"]) 
-                  for g in grades if g.get("poids"))
-        den = sum(float(g["poids"]) for g in grades if g.get("poids"))
+        def poids_valide(g):
+            try:
+                return float(g["poids"]) > 0
+            except (TypeError, ValueError):
+                return False
+
+        num = sum((float(g["note"]) if g["note"] is not None else 0.0) * float(g["poids"])
+                  for g in grades if poids_valide(g))
+        den = sum(float(g["poids"]) for g in grades if poids_valide(g))
         
         moy_init = num / den if den > 0 else 0.0
         
