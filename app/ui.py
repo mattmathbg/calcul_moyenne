@@ -42,11 +42,11 @@ def ui_dashboard():
     # Indicateurs
     c_main, c_det = st.columns(2)
     with c_main:
-        delta = res['Année'] - 10
-        st.metric("Moyenne Annuelle (Pessimiste)", f"{res['Année']:.2f}/20", delta=f"{delta:.2f}")
+        delta = res['Annee'] - 10
+        st.metric("Moyenne Annuelle (Pessimiste)", f"{res['Annee']:.2f}/20", delta=f"{delta:.2f}")
         st.metric("🎯 Moyenne Actuelle (réelle)", f"{res['Actuelle']:.2f}/20", help="Basée uniquement sur les notes reçues.")
         
-        if res['Année'] >= 10:
+        if res['Annee'] >= 10:
             msg = "✅ VALIDÉ PAR COMPENSATION" if (res['S1'] < 10 or res['S2'] < 10) else "🎉 ANNÉE VALIDÉE"
             st.markdown(f'<div class="success-box"><b>{msg}</b></div>', unsafe_allow_html=True)
         else:
@@ -69,7 +69,7 @@ def ui_dashboard():
     # Graphique général
     if res.get('details'):
         df = pd.DataFrame(res['details'])
-        fig = px.bar(df, x="Nom", y="Moyenne", color="Catégorie", text="Moyenne", hover_data=["Semestre", "Moyenne Actuelle"])
+        fig = px.bar(df, x="Nom", y="Moyenne", color="Categorie", text="Moyenne", hover_data=["Semestre", "Moyenne Actuelle"])
         fig.add_hline(y=10, line_dash="dash")
         st.plotly_chart(fig, use_container_width=True)
 
