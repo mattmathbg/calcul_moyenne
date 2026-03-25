@@ -22,7 +22,7 @@ class DataManager:
             for g in raw_grades:
                 note, poids = None, None
                 if isinstance(g, (list, tuple)) and len(g) >= 2:
-                    note, poids = g, g
+                    note, poids = g[0], g[1]
                 elif isinstance(g, dict):
                     note, poids = g.get("note"), g.get("poids")
                 
