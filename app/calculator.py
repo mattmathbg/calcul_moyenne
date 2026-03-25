@@ -6,8 +6,10 @@ class Calculator:
         sc = details.get("sc", None)
         
         # Pessimiste : note manquante = 0
-        num = sum((g["note"] if g["note"] is not None else 0) * g["poids"] for g in grades if g["poids"])
-        den = sum(g["poids"] for g in grades if g["poids"])
+        # On force la conversion en float() pour éviter les TypeError
+        num = sum((float(g["note"]) if g["note"] is not None else 0.0) * float(g["poids"]) 
+                  for g in grades if g.get("poids"))
+        den = sum(float(g["poids"]) for g in grades if g.get("poids"))
         
         moy_init = num / den if den > 0 else 0.0
         
