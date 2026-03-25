@@ -1,13 +1,32 @@
+import math
+
 class Calculator:
+    @staticmethod
+    def _safe_float(val, default=None):
+        if val is None or val == "":
+            return default
+        try:
+            f = float(val)
+            if math.isnan(f):
+                return default
+            return f
+        except (ValueError, TypeError):
+            return default
     @staticmethod
     def _calculer_moyenne_ue(details):
         """Calcule la moyenne d'une UE (Pessimiste + Seconde Chance)."""
         grades = details.get("grades", [])
-        sc = details.get("sc", None)
+        sc = Calculator._safe_float(details.get("sc"))
         
         # Pessimiste : note manquante = 0
-        num = sum((g["note"] if g["note"] is not None else 0) * g["poids"] for g in grades if g["poids"])
-        den = sum(g["poids"] for g in grades if g["poids"])
+        num = 0.0
+        den = 0.0
+        for g in grades:
+            n = Calculator._safe_float(g.get("note"), 0.0)
+            p = Calculator._safe_float(g.get("poids"), 0.0)
+            if p > 0:
+                num += n * p
+                den += p
         
         moy_init = num / den if den > 0 else 0.0
         
@@ -34,25 +53,31 @@ class Calculator:
         
         for nom, details in data.items():
             moyenne_pessimiste = Calculator._calculer_moyenne_ue(details)
-            coef = details.get("coef", 1.0)
+            coef = Calculator._safe_float(details.get("coef"), 1.0)
             sem = details.get("semestre", "S1")
             cat = details.get("categorie", "Général")
             target = "S1" if sem in ["S1", 1] else "S2"
             
             # --- Calcul de la Moyenne Actuelle ---
             grades = details.get("grades", [])
-            valid_grades = [g for g in grades if g.get("note") is not None and g.get("poids")]
+            valid_grades = []
+            for g in grades:
+                n = Calculator._safe_float(g.get("note"))
+                p = Calculator._safe_float(g.get("poids"))
+                if n is not None and p is not None and p > 0:
+                    valid_grades.append((n, p))
+                    
             moyenne_actuelle = None
             if valid_grades:
-                moyenne_actuelle = sum(g["note"] * g["poids"] for g in valid_grades) / sum(g["poids"] for g in valid_grades)
+                moyenne_actuelle = sum(n * p for n, p in valid_grades) / sum(p for n, p in valid_grades)
                 stats["Actuelle"]["points"] += moyenne_actuelle * coef
                 stats["Actuelle"]["coefs"] += coef
 
             # --- Calcul de la Moyenne sans 0 ---
-            valid_grades_sans_0 = [g for g in grades if g.get("note") is not None and g.get("note") > 0 and g.get("poids")]
+            valid_grades_sans_0 = [(n, p) for n, p in valid_grades if n > 0]
             moyenne_sans_0 = None
             if valid_grades_sans_0:
-                moyenne_sans_0 = sum(g["note"] * g["poids"] for g in valid_grades_sans_0) / sum(g["poids"] for g in valid_grades_sans_0)
+                moyenne_sans_0 = sum(n * p for n, p in valid_grades_sans_0) / sum(p for n, p in valid_grades_sans_0)
                 stats["Actuelle_sans_0"]["points"] += moyenne_sans_0 * coef
                 stats["Actuelle_sans_0"]["coefs"] += coef
                 stats[target + "_sans_0"]["points"] += moyenne_sans_0 * coef
