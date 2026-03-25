@@ -61,7 +61,7 @@ def ui_dashboard():
         for val, title, col in [(res['S1'], "S1", "#3498db"), (res['S2'], "S2", "#9b59b6")]:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number", value=val, title={'text': title},
-                gauge={'axis': {'range':}, 'bar': {'color': col}, 'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 10}}
+                gauge={'axis': {'range': [0, 20]}, 'bar': {'color': col}, 'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 10}}
             ))
             fig.update_layout(height=120, margin=dict(l=10,r=10,t=10,b=10))
             if title == "S1": c1.plotly_chart(fig, use_container_width=True) 
