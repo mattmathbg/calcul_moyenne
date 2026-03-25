@@ -120,3 +120,49 @@ def ui_input():
                 st.session_state.ue_data[ue] = data
                 st.toast("Sauvegardé !")
                 st.rerun()
+
+def ui_optimist():
+    st.header("✨ Moyenne Optimiste (Sans 0)")
+    st.info("Cette page calcule vos moyennes en ignorant totalement les notes égales à 0 (utile si le 0 est provisoire).")
+    
+    if not st.session_state.ue_data:
+        st.warning("Ajoutez des UEs ou chargez un fichier.")
+        return
+
+    res = Calculator.compute_stats(st.session_state.ue_data)
+    
+    # Indicateurs
+    c_main, c_det = st.columns()
+    with c_main:
+        st.metric("🎯 Moyenne Actuelle (sans 0)", f"{res.get('Actuelle_sans_0', 0):.2f}/20")
+        
+    with c_det:
+        c1, c2 = st.columns(2)
+        c1.metric("Semestre 1 (sans 0)", f"{res.get('S1_sans_0', 0):.2f}")
+        c2.metric("Semestre 2 (sans 0)", f"{res.get('S2_sans_0', 0):.2f}")
+        
+        # Jauges
+        for val, title, col in [(res.get('S1_sans_0', 0), "S1", "#3498db"), (res.get('S2_sans_0', 0), "S2", "#9b59b6")]:
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number", value=val, title={'text': title},
+                gauge={'axis': {'range': [0, 20]}, 'bar': {'color': col}, 'threshold': {'line': {'color': "green", 'width': 4}, 'thickness': 0.75, 'value': 10}}
+            ))
+            fig.update_layout(height=120, margin=dict(l=10,r=10,t=10,b=10))
+            if title == "S1": c1.plotly_chart(fig, use_container_width=True) 
+            else: c2.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
+
+    # Graphique général
+    if res.get('details'):
+        df = pd.DataFrame(res['details'])
+        if 'Moyenne Sans 0' in df.columns:
+            # Filtrer pour ne pas afficher les UEs sans notes non-nulles
+            df_plot = df.dropna(subset=['Moyenne Sans 0'])
+            if not df_plot.empty:
+                st.subheader("📊 Détails des UEs (Moyenne > 0)")
+                fig = px.bar(df_plot, x="Nom", y="Moyenne Sans 0", color="Catégorie", text="Moyenne Sans 0", hover_data=["Semestre", "Moyenne Actuelle"])
+                fig.add_hline(y=10, line_dash="dash")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Aucune note supérieure à 0 n'a été trouvée dans vos UEs.")
