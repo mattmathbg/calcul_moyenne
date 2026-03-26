@@ -26,7 +26,7 @@ ue_data_matteo = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(11, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13.3, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14, 0.5), (None, 0.5)], "sc": None },
 }
 
@@ -52,7 +52,7 @@ ue_data_yiru = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(9, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13.9, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(15.75, 0.5), (None, 0.5)], "sc": None },
 }
 
@@ -78,7 +78,7 @@ ue_data_ryad = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(11.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(15, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(12.1, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
 }
 
@@ -104,7 +104,7 @@ ue_data_hugo = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(11.4, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(13.75, 0.5), (None, 0.5)], "sc": None },
 }
 
@@ -130,7 +130,7 @@ ue_data_momo = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
 }
 
@@ -156,6 +156,6 @@ ue_data_robin = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(10, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(12.9, 0.5), (None, 0.5)], "sc": None },
 "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
 }
