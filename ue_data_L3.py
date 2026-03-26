@@ -157,5 +157,5 @@ ue_data_robin = {
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (None, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(10, 0.5), (None, 0.5)], "sc": None },
     "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(12.9, 0.5), (None, 0.5)], "sc": None },
-"Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
+    "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
 }
