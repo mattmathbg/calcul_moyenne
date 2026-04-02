@@ -46,7 +46,7 @@ ue_data_yiru = {
     # --- SEMESTRE 2 ---
     "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(16.25, 0.5), (20, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(19, 0.5), (None, 0.5)], "sc": None },
-    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(16, 0.5), (None, 0.5)], "sc": None },
+    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(16, 0.5), (14.5, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "algo dynamique": { "coef": 3, "semestre": "S2", "grades": [(11.25, 0.5), (None, 0.5)], "sc": None },
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(13.51, 0.5), (None, 0.5)], "sc": None },
@@ -72,11 +72,11 @@ ue_data_ryad = {
     # --- SEMESTRE 2 ---
     "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(17.25, 0.5), (19, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(16, 0.5), (None, 0.5)], "sc": None },
-    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(15.5, 0.5), (None, 0.5)], "sc": None },
+    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(15.5, 0.5), (13, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "algo dynamique": { "coef": 3, "semestre": "S2", "grades": [(7.5, 0.5), (None, 0.5)], "sc": None },
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(14.98, 0.5), (None, 0.5)], "sc": None },
-    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(11.5, 0.5), (None, 0.5)], "sc": None },
+    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(11.5, 0.5), (14.5, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(15, 0.5), (None, 0.5)], "sc": None },
     "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(12.1, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
@@ -150,12 +150,12 @@ ue_data_robin = {
     # --- SEMESTRE 2 ---
     "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (16.5, 0.5)], "sc": None },
     "Compilation": { "coef": 3, "semestre": "S2", "grades": [(19, 0.5), (None, 0.5)], "sc": None },
-    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(15, 0.5), (None, 0.5)], "sc": None },
+    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(15, 0.5), (13.5, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "algo dynamique": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (None, 0.5)], "sc": None },
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(15.57, 0.5), (None, 0.5)], "sc": None },
-    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (None, 0.5)], "sc": None },
-    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(10, 0.5), (None, 0.5)], "sc": None },
+    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(13.5, 0.5), (15, 0.5)], "sc": None },
+    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(10, 0.5), (15, 0.5)], "sc": None },
     "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(12.9, 0.5), (None, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14.75, 0.5), (None, 0.5)], "sc": None },
 }
