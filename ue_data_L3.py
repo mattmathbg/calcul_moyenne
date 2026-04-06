@@ -27,7 +27,7 @@ ue_data_matteo = {
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (5.5, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(11, 0.5), (15, 0.5)], "sc": None },
     "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13.3, 0.5), (None, 0.5)], "sc": None },
-    "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14, 0.5), (None, 0.5)], "sc": None },
+    "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14, 0.5), (7.75, 0.5)], "sc": None },
 }
 
 ue_data_yiru = {
