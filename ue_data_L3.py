@@ -26,7 +26,7 @@ ue_data_matteo = {
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(13.44, 0.5), (13.67, 0.5)], "sc": None },
     "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (5.5, 0.5)], "sc": None },
     "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(11, 0.5), (15, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13.3, 0.5), (None, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(13.3, 0.5), (8.25, 0.5)], "sc": None },
     "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(14, 0.5), (7.75, 0.5)], "sc": None },
 }
 
@@ -96,16 +96,16 @@ ue_data_hugo = {
     "AAS": { "coef": 3, "semestre": "S1", "grades": [(9.5, 0.5), (10, 0.5)], "sc": None },
 
     # --- SEMESTRE 2 ---
-    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(13.75, 0.5), (None, 0.5)], "sc": None },
-    "Compilation": { "coef": 3, "semestre": "S2", "grades": [(16, 0.5), (None, 0.5)], "sc": None },
-    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(8.5, 0.5), (None, 0.5)], "sc": None },
+    "Optimisation": { "coef": 3, "semestre": "S2", "grades": [(13.75, 0.5), (17, 0.5)], "sc": None },
+    "Compilation": { "coef": 3, "semestre": "S2", "grades": [(18, 0.5), (18, 0.5)], "sc": None },
+    "Prog Fonctionnelle": { "coef": 3, "semestre": "S2", "grades": [(8.5, 0.5), (12.5, 0.5)], "sc": None },
     "PPIL": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
     "algo dynamique": { "coef": 3, "semestre": "S2", "grades": [(10, 0.5), (None, 0.5)], "sc": None },
     "Dev mobile": { "coef": 3, "semestre": "S2", "grades": [(12.85, 0.5), (13.67, 0.5)], "sc": None },
-    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (None, 0.5)], "sc": None },
-    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(None, 0.5), (None, 0.5)], "sc": None },
-    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(11.4, 0.5), (None, 0.5)], "sc": None },
-    "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(13.75, 0.5), (None, 0.5)], "sc": None },
+    "intro secu": { "coef": 3, "semestre": "S2", "grades": [(9.5, 0.5), (9, 0.5)], "sc": None },
+    "cryptographie": { "coef": 3, "semestre": "S2", "grades": [(12, 0.5), (15, 0.5)], "sc": None },
+    "Système de gestion de bases de données": { "coef": 3, "semestre": "S2", "grades": [(11.4, 0.5), (8.75, 0.5)], "sc": None },
+    "Modélisation et optimisation des graphes": { "coef": 3, "semestre": "S2", "grades": [(13.75, 0.5), (15.5, 0.5)], "sc": None },
 }
 
 ue_data_momo = {
